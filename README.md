@@ -19,6 +19,10 @@ Vše, co dítě vidí a slyší, je česky. Kód je anglicky.
   První úsek hraje, jakmile je hotový, ostatní se dotahují dopředu.
 - **Postup** (pozice, zvuk, odpovědi, skóre, fronta opakování) se průběžně ukládá do Vercel Blob – pokračuje se na kterémkoli zařízení.
 
+## Nastavení klíčů v aplikaci
+Tlačítko ⚙️ v záhlaví: Gemini API klíč, libovolný model Gemini (lze načíst seznam), ElevenLabs klíč, hlas a model (výchozí `eleven_v4`).
+Hodnoty se ukládají jen do localStorage prohlížeče a posílají se v hlavičkách na server aplikace; proměnné prostředí slouží jako záloha.
+
 ## Proměnné prostředí
 Viz `.env.example`. Klíče existují jen na serveru (`GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`).
 Názvy modelů se nastavují přes `GEMINI_MODEL`, `GEMINI_CHECK_MODEL`, `ELEVENLABS_MODEL_ID`.

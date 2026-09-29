@@ -5,6 +5,7 @@ import { api, ApiError, type CourseState, type LessonData, type PublicPart, type
 import Player from "./Player";
 import Quiz from "./Quiz";
 import Result from "./Result";
+import SettingsDialog from "./Settings";
 
 type Step =
   | { key: string; kind: "learn"; label: string; part: PublicPart }
@@ -31,13 +32,14 @@ function buildSteps(l: LessonData): Step[] {
 }
 
 export default function App() {
-  const [phase, setPhase] = useState<"boot" | "code" | "loading" | "lesson" | "finished" | "error">("boot");
+  const [phase, setPhase] = useState<"boot" | "code" | "setup" | "loading" | "lesson" | "finished" | "error">("boot");
   const [course, setCourse] = useState<CourseState | null>(null);
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [gen, setGen] = useState({ done: 0, total: 8 });
   const [errMsg, setErrMsg] = useState("");
   const [stepKey, setStepKey] = useState("");
   const [showMap, setShowMap] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [code, setCode] = useState("");
   const [codeErr, setCodeErr] = useState(false);
   const startPos = useRef({ segmentIndex: 0, time: 0 });
@@ -109,6 +111,13 @@ export default function App() {
     try {
       const a = await api<{ ok: boolean }>("/api/auth");
       if (!a.ok) return setPhase("code");
+      // API keys come from this browser's Settings (or the server's environment)
+      const h = await api<{ gemini: { key: boolean }; elevenlabs: { key: boolean; voiceId: boolean } }>("/api/health");
+      if (!h.gemini.key || !h.elevenlabs.key || !h.elevenlabs.voiceId) {
+        setPhase("setup");
+        setShowSettings(true);
+        return;
+      }
       await enter(await api<CourseState>("/api/state"));
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) return setPhase("code");
@@ -187,14 +196,33 @@ export default function App() {
           <h1 className="text-xl font-extrabold text-brand">Komenský</h1>
           <p className="text-sm text-ink/60">{course?.subject ?? "Matematika pro 3. třídu"}</p>
         </div>
-        {course && (
-          <button onClick={() => setShowMap(true)} className="rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5">
-            🗺️ Přehled {course.completed.length}/{course.total}
+        <div className="flex gap-2">
+          {course && (
+            <button onClick={() => setShowMap(true)} className="rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5">
+              🗺️ Přehled {course.completed.length}/{course.total}
+            </button>
+          )}
+          <button onClick={() => setShowSettings(true)} className="rounded-full bg-white px-3 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5" aria-label="Nastavení">
+            ⚙️
           </button>
-        )}
+        </div>
       </header>
       {children}
       {showMap && course && <Overview course={course} onClose={() => setShowMap(false)} />}
+      {showSettings && (
+        <SettingsDialog
+          firstRun={phase === "setup"}
+          onClose={() => setShowSettings(false)}
+          onSaved={() => {
+            setShowSettings(false);
+            // Restart only when we were blocked; otherwise new settings apply to the next request.
+            if (phase === "setup" || phase === "error") {
+              setPhase("boot");
+              void boot();
+            }
+          }}
+        />
+      )}
     </div>
   );
 
@@ -222,6 +250,18 @@ export default function App() {
         {codeErr && <p className="text-bad">Kód nesedí, zkus to znovu.</p>}
         <button className="rounded-2xl bg-brand px-6 py-3 text-xl font-bold text-white">Vstoupit</button>
       </form>,
+    );
+
+  if (phase === "setup")
+    return shell(
+      <div className="mt-10 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
+        <div className="text-5xl">🔑</div>
+        <h2 className="mt-2 text-2xl font-extrabold">Nejdřív nastavíme klíče</h2>
+        <p className="mt-2 text-ink/70">Pro výklad (Gemini) a hlas (ElevenLabs) je potřeba zadat API klíče.</p>
+        <button onClick={() => setShowSettings(true)} className="mt-4 rounded-2xl bg-brand px-6 py-3 text-lg font-bold text-white">
+          Otevřít nastavení
+        </button>
+      </div>,
     );
 
   if (phase === "error")

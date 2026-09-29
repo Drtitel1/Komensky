@@ -1,18 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
+import { creds } from "./creds";
 
-let client: GoogleGenAI | null = null;
-function ai() {
-  if (!client) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
-    client = new GoogleGenAI({ apiKey });
-  }
-  return client;
+export function ai() {
+  const apiKey = creds().geminiKey;
+  if (!apiKey) throw new Error("Chybí Gemini API klíč (Nastavení).");
+  return new GoogleGenAI({ apiKey });
 }
 
-export const MODEL = () => process.env.GEMINI_MODEL || "gemini-3.8-flash";
-export const CHECK_MODEL = () => process.env.GEMINI_CHECK_MODEL || MODEL();
+export const MODEL = () => creds().geminiModel || "gemini-3.8-flash";
+export const CHECK_MODEL = () => creds().geminiCheckModel || MODEL();
 
 interface JsonCall<T> {
   model?: string;

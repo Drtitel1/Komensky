@@ -1,13 +1,14 @@
 import { createHash } from "crypto";
 import { exists, readBuffer, writeBuffer } from "./blob";
+import { creds } from "./creds";
 import { toSpeech } from "./speech";
 
 const MAX_CHARS = 1500;
 
 export function ttsConfig() {
   return {
-    voiceId: process.env.ELEVENLABS_VOICE_ID ?? "",
-    modelId: process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2",
+    voiceId: creds().elevenVoice,
+    modelId: creds().elevenModel || "eleven_v4",
     languageCode: process.env.ELEVENLABS_LANGUAGE_CODE || "",
   };
 }
@@ -50,10 +51,12 @@ async function synthesize(text: string): Promise<Buffer> {
     const { MOCK_MP3 } = await import("./mock");
     return Buffer.from(MOCK_MP3, "base64");
   }
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = creds().elevenKey;
   const { voiceId, modelId, languageCode } = ttsConfig();
-  if (!apiKey) throw new Error("ELEVENLABS_API_KEY is not set");
-  if (!voiceId) throw new Error("ELEVENLABS_VOICE_ID is not set");
+  if (!apiKey) throw new Error("Chybí ElevenLabs API klíč (Nastavení).");
+  if (!voiceId) throw new Error("Chybí hlas ElevenLabs (Nastavení).");
+  // v3/v4 models take their own expressive defaults; classic voice settings only apply to older models.
+  const legacy = /multilingual_v2|flash_v2|turbo_v2/.test(modelId);
 
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_64`,
@@ -64,7 +67,7 @@ async function synthesize(text: string): Promise<Buffer> {
         text,
         model_id: modelId,
         ...(languageCode ? { language_code: languageCode } : {}),
-        voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.1, speed: 0.95 },
+        ...(legacy ? { voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.1, speed: 0.95 } } : {}),
       }),
     },
   );

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guard } from "@/lib/auth";
+import { withCreds } from "@/lib/creds";
 import { getLesson, nextLessonId } from "@/curriculum";
 import { progressOf, stepLesson } from "@/lib/generation";
 import { currentLessonId, loadMeta } from "@/lib/store";
@@ -8,7 +9,7 @@ export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 /** Runs ONE small generation step and reports progress; the client calls it repeatedly until status = ready. */
-export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export const POST = withCreds(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
   const denied = guard(req);
   if (denied) return denied;
   const { id } = await ctx.params;
@@ -32,4 +33,4 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     console.error("generate failed", id, e);
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
-}
+});

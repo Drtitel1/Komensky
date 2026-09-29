@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guard } from "@/lib/auth";
+import { withCreds } from "@/lib/creds";
 import { attemptReview, lessonPath } from "@/lib/generation";
 import { writeJson } from "@/lib/blob";
 import { loadAttempts, loadLesson, publicPart, saveAttempts } from "@/lib/store";
@@ -8,7 +9,7 @@ export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 /** One attempt at generating the review part. Client repeats while status = "retry". */
-export async function POST(req: NextRequest) {
+export const POST = withCreds(async (req: NextRequest) => {
   const denied = guard(req);
   if (denied) return denied;
   const { lessonId } = (await req.json().catch(() => ({}))) as { lessonId?: string };
@@ -41,4 +42,4 @@ export async function POST(req: NextRequest) {
     console.error("review failed", e);
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
-}
+});

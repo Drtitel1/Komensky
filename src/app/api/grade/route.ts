@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guard } from "@/lib/auth";
+import { withCreds } from "@/lib/creds";
 import { earlierLessons } from "@/curriculum";
 import { gradeAnswer } from "@/lib/grading";
 import { recordResult } from "@/lib/srs";
@@ -9,7 +10,7 @@ import type { AnswerRecord } from "@/lib/types";
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
+export const POST = withCreds(async (req: NextRequest) => {
   const denied = guard(req);
   if (denied) return denied;
   const body = (await req.json().catch(() => null)) as { qid?: string; given?: string; warmup?: boolean } | null;
@@ -60,4 +61,4 @@ export async function POST(req: NextRequest) {
     await saveMeta(meta);
   }
   return NextResponse.json(reveal(q, rec));
-}
+});
