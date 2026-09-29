@@ -75,8 +75,12 @@ export async function startMic(h: MicHandlers): Promise<MicSession> {
     } catch {}
   };
   const sendChunk = (b64: string, commit = false) => {
-    if (open && ws) ws.send(JSON.stringify({ message_type: "input_audio_chunk", audio_base_64: b64, commit, sample_rate: RATE }));
-    else if (b64) queue.push(b64);
+    if (open && ws) {
+      if (ws.readyState !== WebSocket.OPEN) return; // connection already gone: onclose reports it
+      try {
+        ws.send(JSON.stringify({ message_type: "input_audio_chunk", audio_base_64: b64, commit, sample_rate: RATE }));
+      } catch {}
+    } else if (b64) queue.push(b64);
   };
 
   // resample the microphone signal (usually 44.1/48 kHz) to 16 kHz PCM, 100 ms per message
@@ -132,7 +136,8 @@ export async function startMic(h: MicHandlers): Promise<MicSession> {
     }
     const p = new URLSearchParams({ model_id: "scribe_v2_realtime", audio_format: "pcm_16000", commit_strategy: "vad", vad_silence_threshold_secs: "0.8", token });
     if (!langFallback) p.set("language_code", "cs");
-    ws = new WebSocket(`wss://api.elevenlabs.io/v1/speech-to-text/realtime?${p}`);
+    const sock = new WebSocket(`wss://api.elevenlabs.io/v1/speech-to-text/realtime?${p}`);
+    ws = sock;
     ws.onopen = () => {
       open = true;
       h.onState?.("listening");
@@ -140,6 +145,7 @@ export async function startMic(h: MicHandlers): Promise<MicSession> {
       if (stopping) sendChunk("", true);
     };
     ws.onmessage = (ev) => {
+      if (ws !== sock) return;
       let m: { message_type?: string; text?: string; error?: string; message?: string };
       try {
         m = JSON.parse(String(ev.data));
@@ -163,8 +169,10 @@ export async function startMic(h: MicHandlers): Promise<MicSession> {
           // language code not accepted here: reconnect with automatic detection
           langFallback = true;
           open = false;
+          const old = ws;
+          ws = null; // marks the old socket as stale so its onclose is ignored
           try {
-            ws?.close();
+            old?.close();
           } catch {}
           void connect();
           return;
@@ -177,14 +185,26 @@ export async function startMic(h: MicHandlers): Promise<MicSession> {
       }
     };
     ws.onerror = () => {
+      if (ws !== sock) return;
       if (!finished && !stopping) {
         finished = true;
         cleanup();
         h.onError("Přepis hlasu se nepodařilo spojit.");
       }
     };
-    ws.onclose = () => {
-      if (!finished && stopping) finish(text || partial);
+    ws.onclose = (ev) => {
+      if (finished || ws !== sock) return; // finished already, or an old socket after a reconnect
+      open = false;
+      if (stopping || text || partial) return finish(text || partial);
+      if (!langFallback) {
+        // closed before anything was recognised: retry once with automatic language detection
+        langFallback = true;
+        void connect();
+        return;
+      }
+      finished = true;
+      cleanup();
+      h.onError(`spojení s přepisem skončilo (${ev.code}${ev.reason ? ": " + ev.reason : ""})`);
     };
   };
   void connect();
