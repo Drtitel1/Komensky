@@ -10,6 +10,7 @@ export function ai() {
 
 export const MODEL = () => creds().geminiModel || "gemini-3.8-flash";
 export const CHECK_MODEL = () => creds().geminiCheckModel || MODEL();
+export const CHAT_MODEL = () => creds().geminiChatModel || MODEL();
 
 interface JsonCall<T> {
   model?: string;

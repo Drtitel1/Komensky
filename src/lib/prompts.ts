@@ -48,7 +48,7 @@ ${prev.map((l) => `- Lekce ${l.id} ${l.title}: ${l.keyFacts.join("; ")}`).join("
 
 export const QUESTION_RULES = `POŽADAVKY NA OTÁZKY:
 - Typy: "mc" (výběr z 3 až 4 možností, právě jedna správná), "short" (krátká odpověď – číslo nebo slovo/slovní spojení), "explain" (vysvětli vlastními slovy).
-- Každá otázka má: type, prompt (zadání pro dítě, česky), options (jen u mc), correctIndex (jen u mc, číslováno od 0), modelAnswer (správná odpověď; u explain 1–3 věty s klíčovými body), explanation (krátké laskavé vysvětlení, proč je to správně), sourceId (id odstavce ze zdroje, např. "Z3", ze kterého otázka vychází).
+- Každá otázka má: type, prompt (zadání pro dítě, česky), options (jen u mc), correctIndex (jen u mc, číslováno od 0), modelAnswer (správná odpověď; u explain 1–3 věty s klíčovými body), accepted (jen u short: 2 až 5 dalších přijatelných zápisů odpovědi, např. číslo číslicemi i slovy česky, s jednotkou i bez ní), explanation (krátké laskavé vysvětlení, proč je to správně), sourceId (id odstavce ze zdroje, např. "Z3", ze kterého otázka vychází).
 - Matematická znaménka v zadání smíš psát symboly (·, :, +, −, =, <, >).
 - U "short" musí mít otázka jednu jednoznačnou správnou odpověď (např. číslo). Nikdy se neptej na to, co ve zdroji není.`;
 
@@ -147,3 +147,34 @@ Odpověď dítěte: ${JSON.stringify(given)}
 
 Vrať JSON: {"verdict": "correct" | "partial" | "wrong", "feedback": "1–2 krátké věty česky"}.`;
 }
+
+export function reviewPackPrompt(
+  lesson: LessonDef,
+  plan: { title: string; focus: string; passageIds: string[] }[],
+  index: number,
+  ownQuestions: Question[],
+  issues: string[],
+): string {
+  const item = plan[index];
+  return `#KIND:reviewpack
+${sourceBlock(lesson)}
+
+${priorKnowledge(lesson.id)}
+
+ÚKOL: Dítě možná bude potřebovat zopakovat ČÁST ${index + 1} lekce: "${item.title}" (${item.focus}; odstavce ${item.passageIds.join(", ")}).
+Vytvoř předem připravené krátké opakování jen této části:
+1) script: laskavé mluvené shrnutí jako pole odstavců (celkem 80 až 150 slov), které téma vysvětlí jinak než původní výklad, s jedním jednoduchým příkladem.
+2) questions: přesně 4 NOVÉ kontrolní otázky jen k této části, různé od těchto již použitých:
+${ownQuestions.map((q) => "- " + q.prompt).join("\n") || "- (žádné)"}
+${QUESTION_RULES}
+${issues.length ? `\nPŘEDCHOZÍ POKUS MĚL TYTO CHYBY, oprav je:\n${issues.map((x) => "- " + x).join("\n")}\n` : ""}
+Vrať JSON.`;
+}
+
+export const SYSTEM_ASK = `Jsi laskavý učitel matematiky, který ústně odpovídá ${AGE}letému dítěti (${GRADE}, Česko). Piš VÝHRADNĚ česky.
+PRAVIDLA:
+- Odpovídej POUZE podle ZDROJOVÉHO MATERIÁLU a "dřívější znalosti". Nic nepřidávej z vlastní paměti.
+- Pokud zdroj odpověď neobsahuje, řekni jednou větou, že tohle teď neprobíráme a ať se zeptá paní učitelky nebo rodičů. Nehádej.
+- Odpověď má nejvýše 3 krátké věty, jednoduché a přátelské, bez odrážek. Matematická znaménka piš slovy ("třikrát čtyři je dvanáct").
+- Nikdy neprozrazuj řešení kontrolních otázek a kvízu; místo toho dej nápovědu nebo připomeň pravidlo.
+- Když dítě řekne něco nesouvisejícího, laskavě ho vrať k učení.`;

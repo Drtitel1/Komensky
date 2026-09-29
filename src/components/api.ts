@@ -11,6 +11,7 @@ export interface Settings {
   geminiKey: string;
   geminiModel: string;
   geminiCheckModel: string;
+  geminiChatModel: string;
   elevenKey: string;
   elevenVoice: string;
   elevenModel: string;
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   geminiKey: "",
   geminiModel: "gemini-3.8-flash",
   geminiCheckModel: "",
+  geminiChatModel: "",
   elevenKey: "",
   elevenVoice: "",
   elevenModel: "eleven_v4",
@@ -42,13 +44,14 @@ export function saveSettings(s: Settings) {
   } catch {}
 }
 
-function settingsHeaders(): Record<string, string> {
+export function settingsHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const s = loadSettings();
   const h: Record<string, string> = {};
   if (s.geminiKey) h["x-gemini-key"] = s.geminiKey.trim();
   if (s.geminiModel) h["x-gemini-model"] = s.geminiModel.trim();
   if (s.geminiCheckModel) h["x-gemini-check-model"] = s.geminiCheckModel.trim();
+  if (s.geminiChatModel) h["x-gemini-chat-model"] = s.geminiChatModel.trim();
   if (s.elevenKey) h["x-eleven-key"] = s.elevenKey.trim();
   if (s.elevenVoice) h["x-eleven-voice"] = s.elevenVoice.trim();
   if (s.elevenModel) h["x-eleven-model"] = s.elevenModel.trim();

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api, DEFAULT_SETTINGS, loadSettings, saveSettings, type Settings } from "./api";
+import { clearTtsCache } from "./tts";
 
 const TTS_MODELS = [
   { id: "eleven_v4", label: "Eleven v4 (nejnovější, nejlepší kvalita)" },
@@ -74,6 +75,7 @@ export default function SettingsDialog({ onClose, onSaved, firstRun }: Props) {
 
   const save = () => {
     saveSettings({ ...s, geminiKey: s.geminiKey.trim(), elevenKey: s.elevenKey.trim(), elevenVoice: s.elevenVoice.trim() });
+    clearTtsCache(); // audio URLs are per voice/model
     onSaved();
   };
 
@@ -100,6 +102,8 @@ export default function SettingsDialog({ onClose, onSaved, firstRun }: Props) {
         <input className={field} list="gemini-models" value={s.geminiModel} onChange={(e) => set({ geminiModel: e.target.value })} placeholder="gemini-3.8-flash" />
         <label className="mb-1 mt-3 block text-sm font-semibold">Model pro kontrolu faktů (prázdné = stejný)</label>
         <input className={field} list="gemini-models" value={s.geminiCheckModel} onChange={(e) => set({ geminiCheckModel: e.target.value })} placeholder="stejný jako výše" />
+        <label className="mb-1 mt-3 block text-sm font-semibold">Rychlý model pro rozhovor „Zeptej se“ (prázdné = stejný)</label>
+        <input className={field} list="gemini-models" value={s.geminiChatModel} onChange={(e) => set({ geminiChatModel: e.target.value })} placeholder="např. lehčí / rychlejší model" />
         <datalist id="gemini-models">
           {models.map((m) => (
             <option key={m} value={m} />

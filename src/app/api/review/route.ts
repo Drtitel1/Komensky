@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guard } from "@/lib/auth";
 import { withCreds } from "@/lib/creds";
-import { attemptReview, lessonPath } from "@/lib/generation";
+import { attemptReview, buildReviewFromPacks, lessonPath } from "@/lib/generation";
 import { writeJson } from "@/lib/blob";
 import { loadAttempts, loadLesson, publicPart, saveAttempts } from "@/lib/store";
 
@@ -18,6 +18,18 @@ export const POST = withCreds(async (req: NextRequest) => {
   const attempts = await loadAttempts(lessonId);
   if (attempts.completed || attempts.reviewRound < 1 || !attempts.pendingWrong?.length) return NextResponse.json({ error: "no review needed" }, { status: 400 });
   if (attempts.reviewPart) return NextResponse.json({ status: "ready", review: publicPart(attempts.reviewPart) });
+
+  // Fast path: packs prepared in advance (already fact-checked) – nothing to generate, nothing to wait for.
+  const prepared = await loadLesson(lessonId);
+  if (prepared) {
+    const part = buildReviewFromPacks(prepared, attempts.pendingWrong, attempts.reviewRound);
+    if (part) {
+      attempts.reviewPart = part;
+      attempts.reviewRetry = undefined;
+      await saveAttempts(attempts);
+      return NextResponse.json({ status: "ready", review: publicPart(part) });
+    }
+  }
 
   try {
     const retry = attempts.reviewRetry ?? { attempts: 0, issues: [] };

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, type PublicQuestion, type Revealed } from "./api";
+import { startMic, type MicSession } from "./mic";
+import { questionSpeech, ttsUrl } from "./tts";
 
 interface Props {
   questions: PublicQuestion[];
@@ -12,9 +14,6 @@ interface Props {
   doneLabel: string;
 }
 
-const fmtQ = (q: PublicQuestion) =>
-  q.prompt + (q.options ? " " + q.options.map((o, i) => `Možnost ${String.fromCharCode(65 + i)}: ${o}.`).join(" ") : "");
-
 export default function Quiz({ questions, answered, onAnswered, onDone, warmup, doneLabel }: Props) {
   const firstOpen = questions.findIndex((q) => !answered[q.id]);
   const [i, setI] = useState(firstOpen === -1 ? questions.length : firstOpen);
@@ -24,6 +23,8 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
   const [err, setErr] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
+  const [mic, setMic] = useState<"idle" | "connecting" | "listening">("idle");
+  const micRef = useRef<MicSession | null>(null);
 
   const q = questions[i];
   const res = q ? answered[q.id] : undefined;
@@ -32,14 +33,19 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
     setChoice(null);
     setText("");
     setErr(null);
-    return () => audio.current?.pause();
+    return () => {
+      audio.current?.pause();
+      micRef.current?.cancel();
+      micRef.current = null;
+      setMic("idle");
+    };
   }, [i]);
 
   const speak = async () => {
     if (!q) return;
     setSpeaking(true);
     try {
-      const { url } = await api<{ url: string }>("/api/tts", { json: { text: fmtQ(q) } });
+      const url = await ttsUrl(questionSpeech(q)); // usually already prepared in the background
       audio.current?.pause();
       audio.current = new Audio(url);
       audio.current.onended = () => setSpeaking(false);
@@ -50,9 +56,9 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
     }
   };
 
-  const submit = async () => {
+  const submit = async (override?: string) => {
     if (!q) return;
-    const given = q.type === "mc" ? String(choice) : text.trim();
+    const given = override ?? (q.type === "mc" ? String(choice) : text.trim());
     if (!given || given === "null") return;
     setBusy(true);
     setErr(null);
@@ -63,6 +69,37 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
       setErr((e as Error).message === "Failed to fetch" ? "Chybí připojení, zkus to znovu." : "Něco se nepovedlo, zkus to znovu.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const toggleMic = async () => {
+    if (mic === "listening" || mic === "connecting") {
+      micRef.current?.stop();
+      return;
+    }
+    if (!q || res) return;
+    setErr(null);
+    try {
+      audio.current?.pause();
+      micRef.current = await startMic({
+        onState: setMic,
+        onPartial: (t) => setText(t),
+        onFinal: (t) => {
+          micRef.current = null;
+          setMic("idle");
+          if (!t) return setErr("Nic jsem neslyšela, zkus to ještě jednou.");
+          setText(t);
+          if (q.type === "short") void submit(t); // short answers are sent right away
+        },
+        onError: (m) => {
+          micRef.current = null;
+          setMic("idle");
+          setErr(`Mikrofon nefunguje: ${m}`);
+        },
+      });
+    } catch {
+      setMic("idle");
+      setErr("Nepodařilo se zapnout mikrofon (povol ho v prohlížeči).");
     }
   };
 
@@ -104,6 +141,15 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
           </button>
         </div>
 
+        {q.type !== "mc" && !res && (
+          <button
+            onClick={toggleMic}
+            disabled={busy}
+            className={`mb-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-lg font-bold ${mic === "idle" ? "bg-brand-soft" : "bg-bad text-white"}`}
+          >
+            {mic === "idle" ? "🎤 Odpovědět hlasem" : mic === "connecting" ? "🎤 Připojuji… (mluv klidně)" : "⏹ Poslouchám… klepni pro konec"}
+          </button>
+        )}
         {q.type === "mc" ? (
           <div className="flex flex-col gap-3">
             {q.options!.map((o, k) => {
@@ -138,7 +184,7 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
             value={res ? res.given : text}
             onChange={(e) => setText(e.target.value)}
             disabled={!!res || busy}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
+            onKeyDown={(e) => e.key === "Enter" && void submit()}
             inputMode="text"
             autoComplete="off"
             placeholder="Napiš odpověď…"
@@ -159,7 +205,7 @@ export default function Quiz({ questions, answered, onAnswered, onDone, warmup, 
 
         {!res ? (
           <button
-            onClick={submit}
+            onClick={() => submit()}
             disabled={busy || (q.type === "mc" ? choice === null : !text.trim())}
             className="mt-4 w-full rounded-2xl bg-brand px-6 py-3 text-xl font-bold text-white shadow-md active:scale-95"
           >

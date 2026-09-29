@@ -6,6 +6,8 @@ import Player from "./Player";
 import Quiz from "./Quiz";
 import Result from "./Result";
 import SettingsDialog from "./Settings";
+import Ask from "./Ask";
+import { prefetchAudio, questionSpeech } from "./tts";
 
 type Step =
   | { key: string; kind: "learn"; label: string; part: PublicPart }
@@ -134,10 +136,24 @@ export default function App() {
   const nextId = course?.nextLessonId;
   const lessonId = lesson?.lessonId;
   useEffect(() => {
-    if (!lessonId || !nextId || phase !== "lesson") return;
+    if (!lessonId || phase !== "lesson") return;
     let stop = false;
     (async () => {
       let fails = 0;
+      // 1) prepare the review packs of THIS lesson (so a failed quiz never has to wait for generation)
+      while (!stop) {
+        try {
+          const g = await api<{ reviewsDone: boolean; busy: boolean }>(`/api/lesson/${lessonId}/generate`, { json: { reviews: true } });
+          if (g.reviewsDone) break;
+          await sleep(g.busy ? 4000 : 400);
+        } catch {
+          if (++fails > 5) break;
+          await sleep(8000);
+        }
+      }
+      // 2) then the NEXT lesson
+      if (!nextId) return;
+      fails = 0;
       while (!stop) {
         try {
           const g = await api<{ status: string; busy: boolean }>(`/api/lesson/${nextId}/generate`, { json: {} });
@@ -153,6 +169,19 @@ export default function App() {
       stop = true;
     };
   }, [lessonId, nextId, phase]);
+
+  // Convert all voice lines of this lesson in the background (segments + questions), so nothing waits for the voice later.
+  const stepIdxRef = useRef(0);
+  stepIdxRef.current = stepIdx;
+  const reviewId = lesson?.review?.id;
+  useEffect(() => {
+    if (!lesson || phase !== "lesson") return;
+    const texts = steps.slice(Math.max(stepIdxRef.current, 0)).flatMap((s) =>
+      s.kind === "learn" ? s.part.segments.map((g) => g.text) : s.kind === "quiz" ? s.questions.map((q) => questionSpeech(q)) : [],
+    );
+    return prefetchAudio(texts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId, reviewId, phase]);
 
   const goTo = (key: string) => {
     if (!lesson) return;
@@ -335,6 +364,7 @@ export default function App() {
       {step.kind === "result" && (
         <Result key={step.key} lessonId={lesson.lessonId} kind={step.resultKind} onNext={nextLesson} onReviewReady={reviewReady} />
       )}
+      <Ask lessonId={lesson.lessonId} />
     </>,
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api } from "./api";
+import { ttsUrl } from "./tts";
 import { splitSentences } from "@/lib/speech";
 
 interface Props {
@@ -42,7 +42,7 @@ export default function Player({ segments, startIndex, startTime, onPosition, on
     (i: number) => {
       let p = urls.current.get(i);
       if (!p) {
-        p = api<{ url: string }>("/api/tts", { json: { text: segments[i].text } }).then((r) => r.url);
+        p = ttsUrl(segments[i].text);
         p.catch(() => urls.current.delete(i)); // allow retry
         urls.current.set(i, p);
       }
@@ -129,6 +129,16 @@ export default function Player({ segments, startIndex, startTime, onPosition, on
       window.removeEventListener("pagehide", h);
     };
   }, [report]);
+
+  // the "ask the teacher" panel pauses the lesson while it talks
+  useEffect(() => {
+    const h = () => {
+      wantPlay.current = false;
+      audioRef.current?.pause();
+    };
+    window.addEventListener("komensky:pause", h);
+    return () => window.removeEventListener("komensky:pause", h);
+  }, []);
 
   const toggle = () => {
     const a = audioRef.current;

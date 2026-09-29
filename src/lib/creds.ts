@@ -9,6 +9,7 @@ export interface Creds {
   geminiKey: string;
   geminiModel: string;
   geminiCheckModel: string;
+  geminiChatModel: string;
   elevenKey: string;
   elevenVoice: string;
   elevenModel: string;
@@ -20,6 +21,7 @@ const fromEnv = (): Creds => ({
   geminiKey: process.env.GEMINI_API_KEY ?? "",
   geminiModel: process.env.GEMINI_MODEL ?? "",
   geminiCheckModel: process.env.GEMINI_CHECK_MODEL ?? "",
+  geminiChatModel: process.env.GEMINI_CHAT_MODEL ?? "",
   elevenKey: process.env.ELEVENLABS_API_KEY ?? "",
   elevenVoice: process.env.ELEVENLABS_VOICE_ID ?? "",
   elevenModel: process.env.ELEVENLABS_MODEL_ID ?? "",
@@ -32,6 +34,7 @@ function fromRequest(req: NextRequest): Creds {
     geminiKey: h("x-gemini-key", env.geminiKey),
     geminiModel: h("x-gemini-model", env.geminiModel),
     geminiCheckModel: h("x-gemini-check-model", env.geminiCheckModel),
+    geminiChatModel: h("x-gemini-chat-model", env.geminiChatModel),
     elevenKey: h("x-eleven-key", env.elevenKey),
     elevenVoice: h("x-eleven-voice", env.elevenVoice),
     elevenModel: h("x-eleven-model", env.elevenModel),

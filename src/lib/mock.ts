@@ -28,6 +28,8 @@ export function mockJson(prompt: string): unknown {
       return { questions: [...Array.from({ length: 6 }, (_, i) => q(i)), ...Array.from({ length: 4 }, (_, i) => q(i, "short")), q(0, "explain")] };
     case "review":
       return { script: [para(7), para(8)], questions: [q(4), q(5, "short")] };
+    case "reviewpack":
+      return { script: [para(9), para(10)], questions: [q(6), q(7, "short"), q(8), q(9)] };
     case "check":
       return { verdict: "pass", issues: [] };
     case "grade":

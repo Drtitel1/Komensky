@@ -19,6 +19,16 @@ Vše, co dítě vidí a slyší, je česky. Kód je anglicky.
   První úsek hraje, jakmile je hotový, ostatní se dotahují dopředu.
 - **Postup** (pozice, zvuk, odpovědi, skóre, fronta opakování) se průběžně ukládá do Vercel Blob – pokračuje se na kterémkoli zařízení.
 
+## Rychlost a předgenerování
+- Otázky (kontrolní i závěrečný kvíz) vznikají spolu s lekcí a procházejí kontrolou faktů dřív, než je dítě uvidí.
+- U krátkých odpovědí se předem vygeneruje seznam přijatelných zápisů; odpověď (i řečená slovy, „dvacet čtyři“) se vyhodnotí okamžitě bez volání AI.
+- Ke každé části lekce se na pozadí připraví „opakovací balíček“ (shrnutí + 4 nové otázky, také zkontrolované). Když dítě u závěrečného kvízu neuspěje, opakování je hned – nic se negeneruje.
+- Hlas pro celou lekci (výklad i otázky) se převádí na pozadí dopředu; přehrání pak nečeká.
+
+## Hlasová konverzace
+- 🎤 u otázek: odpověď hlasem (ElevenLabs Scribe v2 Realtime, přímé spojení z prohlížeče přes jednorázový token, čeština). Krátké odpovědi se odešlou hned.
+- 💬 „Zeptej se“: dítě se zeptá hlasem nebo textem, učitel odpoví jen podle látky lekce; odpověď se streamuje a čte se po větách, první věta hraje dřív, než je hotová celá odpověď. „Průběžný rozhovor“ po odpovědi sám znovu zapne mikrofon.
+
 ## Nastavení klíčů v aplikaci
 Tlačítko ⚙️ v záhlaví: Gemini API klíč, libovolný model Gemini (lze načíst seznam), ElevenLabs klíč, hlas a model (výchozí `eleven_v4`).
 Hodnoty se ukládají jen do localStorage prohlížeče a posílají se v hlavičkách na server aplikace; proměnné prostředí slouží jako záloha.

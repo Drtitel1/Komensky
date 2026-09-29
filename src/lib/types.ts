@@ -10,6 +10,8 @@ export interface Question {
   modelAnswer: string; // the correct answer (text)
   explanation: string; // shown after answering
   source: string; // source passage the question came from ("[1.2/Z3] ...")
+  accepted?: string[]; // short answers: other accepted spellings (checked without any AI call)
+  partIndex?: number; // which lesson part this question belongs to (used to pick the matching review pack)
 }
 
 /** What the browser sees before answering. */
@@ -40,14 +42,24 @@ export interface PlanItem {
   passageIds: string[];
 }
 
+/** Short recap + fresh questions for one lesson part, generated in advance so a failed quiz needs no waiting. */
+export interface ReviewPack {
+  partIndex: number;
+  title: string;
+  segments: Segment[];
+  questions: Question[];
+}
+
 export interface LessonContent {
   lessonId: string;
   status: "generating" | "ready";
   plan?: PlanItem[];
   parts: Part[];
   finalQuiz?: Question[];
+  reviews?: ReviewPack[];
   flags: Flag[];
   lockUntil?: number;
+  reviewLockUntil?: number;
   retry?: { key: string; attempts: number; issues: string[] };
   createdAt: string;
 }

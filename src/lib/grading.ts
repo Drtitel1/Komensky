@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { generateJson } from "./gemini";
 import { gradePrompt, SYSTEM_GRADER } from "./prompts";
+import { normalizeText, spokenNumber } from "./czech";
 import type { Question } from "./types";
 
 export interface GradeResult {
@@ -11,19 +12,7 @@ export interface GradeResult {
 
 const GradeSchema = z.object({ verdict: z.enum(["correct", "partial", "wrong"]), feedback: z.string() });
 
-const norm = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9,.\- ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-function asNumber(s: string): number | null {
-  const m = s.replace(/\s/g, "").replace(",", ".").match(/^-?\d+(\.\d+)?/);
-  return m ? Number(m[0]) : null;
-}
+const norm = normalizeText;
 
 export async function gradeAnswer(q: Question, given: string): Promise<GradeResult> {
   const text = given.trim();
@@ -34,14 +23,14 @@ export async function gradeAnswer(q: Question, given: string): Promise<GradeResu
   if (!text) return { score: 0, correct: false, feedback: "Zkus něco napsat, i kdyby to nebylo úplně přesné." };
 
   if (q.type === "short") {
-    const a = asNumber(q.modelAnswer);
-    const b = asNumber(text);
+    // 1) prepared answer list – no AI call, instant
+    const known = [q.modelAnswer, ...(q.accepted ?? [])].map(norm);
+    if (known.includes(norm(text))) return { score: 1, correct: true, feedback: "Správně, bravo!" };
+    // 2) numbers, also spoken in words ("dvacet čtyři")
+    const a = spokenNumber(q.modelAnswer);
+    const b = spokenNumber(text);
     const modelIsPureNumber = a !== null && /^-?\d+([.,]\d+)?\s*[a-zA-Zěščřžýáíéúůďťň.]*$/.test(q.modelAnswer.trim());
-    if (modelIsPureNumber && b !== null && a === b) {
-      // Exact numeric match; ignore trailing units. Wrong numbers still go to the grader (e.g. "3 zbytek 2").
-      return { score: 1, correct: true, feedback: "Správně, bravo!" };
-    }
-    if (norm(text) === norm(q.modelAnswer)) return { score: 1, correct: true, feedback: "Správně, bravo!" };
+    if (modelIsPureNumber && b !== null && a === b) return { score: 1, correct: true, feedback: "Správně, bravo!" };
   }
 
   try {
