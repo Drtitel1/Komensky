@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fff8ee;
+  --ink: #2b2a4c;
+  --brand: #5b4bdb;
+  --brand-soft: #ece9ff;
+  --good: #1f9d55;
+  --good-soft: #e3f7ea;
+  --bad: #d64545;
+  --bad-soft: #fde8e8;
+  --warm: #ffb84d;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-warm: var(--warm);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-rounded, "Nunito", "Segoe UI", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
