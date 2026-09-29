@@ -1,0 +1,61 @@
+appId: cz.komensky.app
+productName: Komenský
+copyright: Komenský
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - build/icon.png
+  - package.json
+asar: true
+asarUnpack:
+  - "**/*.node"
+# better-sqlite3 ships N-API prebuilds inside the package (ABI-stable), so no native rebuild is needed
+npmRebuild: false
+nodeGypRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  artifactName: Komensky-Setup-${version}.exe
+  # ---- OPTIONAL CODE SIGNING (later) -------------------------------------------------------------------------------
+  # The installer is UNSIGNED for now, so Windows SmartScreen shows a warning on first run (see the guide for the sister).
+  # To sign, get an OV/EV code-signing certificate (or Azure Trusted Signing), then either
+  #   a) certificate file:  add repository secrets CSC_LINK (base64 of the .pfx) and CSC_KEY_PASSWORD – electron-builder picks them up
+  #      automatically and NOTHING else has to change here; or
+  #   b) Azure Trusted Signing: uncomment the block below and add the AZURE_* secrets (see .github/workflows/release.yml).
+  # azureSignOptions:
+  #   publisherName: "Your Name"
+  #   endpoint: "https://weu.codesigning.azure.net"
+  #   certificateProfileName: "your-profile"
+  #   codeSigningAccountName: "your-account"
+  # Once the installer is signed, also add   publisherName: ["Your Name"]   so updates are verified against the same publisher.
+
+nsis:
+  oneClick: true
+  perMachine: false # per-user install: no administrator rights needed, updates install silently
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false # her progress survives an uninstall / reinstall
+  runAfterFinish: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Komenský
+  language: "1029" # Czech
+  warningsAsErrors: false
+
+publish:
+  provider: github
+  owner: Drtitel1
+  repo: Komensky
+  releaseType: release
+
+# Electron fuses: switch off features an attacker could abuse in the packaged app
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  grantFileProtocolExtraPrivileges: false
+  onlyLoadAppFromAsar: true

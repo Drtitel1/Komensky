@@ -1,0 +1,45 @@
+name: Release
+# Runs when a version tag (v1.2.3) is pushed – normally through `npm run release -- patch`.
+# Builds the Windows NSIS installer and publishes it together with latest.yml (used by the in-app auto-updater)
+# to a GitHub Release. No secrets are needed except the automatic GITHUB_TOKEN.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tag must match package.json version
+        shell: bash
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if [ "v$v" != "${GITHUB_REF_NAME}" ]; then echo "Tag ${GITHUB_REF_NAME} does not match package.json version $v"; exit 1; fi
+
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx electron-vite build
+
+      - name: Build installer and publish GitHub Release
+        run: npx electron-builder --win --x64 --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ---- OPTIONAL CODE SIGNING (later): add these repository secrets and the build signs automatically ----
+          # CSC_LINK: ${{ secrets.CSC_LINK }}                # base64 of the .pfx certificate
+          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Azure Trusted Signing alternative (also uncomment azureSignOptions in electron-builder.yml):
+          # AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          # AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          # AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}

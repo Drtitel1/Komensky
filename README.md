@@ -1,48 +1,54 @@
-# Komenský – mluvený kurz matematiky pro 3. třídu
+# Komenský – mluvený kurz matematiky pro 3. třídu (Windows aplikace)
 
-Samo se řídící kurz: 5 etap, 18 lekcí. Každá lekce má 5–8 mluvených částí (Gemini píše, ElevenLabs čte),
-po každé části kontrolní otázky, na konci závěrečný kvíz. Od 75 % se automaticky pokračuje další lekcí,
-pod 75 % přijde krátké opakování jen chybných témat a nový test. Chyby se vracejí jako rozcvička v dalších lekcích.
+Samostatná desktopová aplikace (Electron, Windows x64) pro jednoho žáka. **Žádný server, žádný Vercel, žádná hostovaná databáze.**
+Vše běží lokálně na počítači; jediné externí služby jsou **Gemini API** (učitel hlasem + příprava lekcí) a **GitHub Releases** (automatické aktualizace).
 
-Vše, co dítě vidí a slyší, je česky. Kód je anglicky.
+- Učitel mluví česky (Gemini 3.8 Live, obousměrný zvuk), ptá se, poslouchá odpovědi a opravuje je. Lekce trvá 30–45 minut.
+- Lekce řídí **stavový automat v aplikaci** (`src/shared/engine.ts`): `WARMUP → (EXPLAIN → CHECK → FEEDBACK) × 5–8 → FINAL_QUIZ → SUMMARY`, při výsledku pod 75 % `REVIEW → RETEST`. Aplikace, ne model, je zdrojem pravdy o postupu.
+- Učivo je přibaleno v aplikaci (`content/curriculum.json`, 5 etap / 18 lekcí). Plán každé lekce (5–8 částí, kontrolní otázky s klíči, závěrečný kvíz 10–15 otázek) vygeneruje `PREP_MODEL` jednou, ověří druhým průchodem (fact-check) a uloží do SQLite.
+- Postup, odpovědi, opakování (spaced repetition), plány a přepisy jsou v SQLite (`%APPDATA%\komensky\komensky.db`) s bezpečnými migracemi.
 
-## Jak to funguje
-- **Učivo** (jediný zdroj pravdy): `src/curriculum/stage*.ts` – Etapy → Lekce → cíle → klíčové poznatky → očíslované odstavce zdroje (`Z1`, `Z2`…).
-  Každé volání Gemini dostane odstavce dané lekce a systémový prompt, který zakazuje přidávat fakta mimo ně.
-  **Zdroj je napsán podle RVP ZV, ne podle konkrétní učebnice – klidně upravte/rozšiřte texty odstavců, vše ostatní se přizpůsobí.**
-- **Generování** po malých krocích (serverless limity): plán → každá část → závěrečný kvíz. Každý krok = 1 volání Gemini + samostatná
-  fact-check kontrola; při selhání se část znovu vygeneruje (max. 2×), zbylé problémy se logují do `flags` v `lessons/<id>.json`.
-  Hotová lekce se uloží a znovu se nikdy negeneruje. Další lekce se předgeneruje na pozadí.
-- **Otázky**: klíč, vysvětlení a citace zdroje se ukládají na serveru a prohlížeč je dostane až po odpovědi.
-  Výběr z možností se opravuje deterministicky, otevřené odpovědi opraví Gemini (s teplotou 0.1).
-- **Audio**: každý úsek (1–3 věty) se převede zvlášť, cache v privátním Vercel Blob podle hashe textu+hlasu+modelu.
-  První úsek hraje, jakmile je hotový, ostatní se dotahují dopředu.
-- **Postup** (pozice, zvuk, odpovědi, skóre, fronta opakování) se průběžně ukládá do Vercel Blob – pokračuje se na kterémkoli zařízení.
+Návody: [pro žačku](docs/PRUVODCE-SESTRA.md) · [pro správce (klíč, vydání, zálohy, cena)](docs/PRUVODCE-SPRAVCE.md)
 
-## Rychlost a předgenerování
-- Otázky (kontrolní i závěrečný kvíz) vznikají spolu s lekcí a procházejí kontrolou faktů dřív, než je dítě uvidí.
-- U krátkých odpovědí se předem vygeneruje seznam přijatelných zápisů; odpověď (i řečená slovy, „dvacet čtyři“) se vyhodnotí okamžitě bez volání AI.
-- Ke každé části lekce se na pozadí připraví „opakovací balíček“ (shrnutí + 4 nové otázky, také zkontrolované). Když dítě u závěrečného kvízu neuspěje, opakování je hned – nic se negeneruje.
-- Hlas pro celou lekci (výklad i otázky) se převádí na pozadí dopředu; přehrání pak nečeká.
+## Architektura a bezpečnost
 
-## Hlasová konverzace
-- 🎤 u otázek: odpověď hlasem (ElevenLabs Scribe v2 Realtime, přímé spojení z prohlížeče přes jednorázový token, čeština). Krátké odpovědi se odešlou hned.
-- 💬 „Zeptej se“: dítě se zeptá hlasem nebo textem, učitel odpoví jen podle látky lekce; odpověď se streamuje a čte se po větách, první věta hraje dřív, než je hotová celá odpověď. „Průběžný rozhovor“ po odpovědi sám znovu zapne mikrofon.
+| Vrstva | Co dělá |
+|---|---|
+| **main** (`src/main`) | jediné místo, kde žije **API klíč** (šifrovaně přes `safeStorage`); generování plánů (`PREP_MODEL`); vydávání **dočasných tokenů** pro Live API; SQLite; aktualizace; PIN; zálohy |
+| **preload** (`src/preload`) | minimální typované API (`window.komensky`), každá metoda = jeden povolený IPC kanál |
+| **renderer** (`src/renderer`) | React + Vite + Tailwind; Live WebSocket, mikrofon (AudioWorklet 16 kHz PCM), přehrávání (24 kHz), stavový automat, přepis |
 
-## Nastavení klíčů v aplikaci
-Tlačítko ⚙️ v záhlaví: Gemini API klíč, libovolný model Gemini (lze načíst seznam), ElevenLabs klíč, hlas a model (výchozí `eleven_v4`).
-Hodnoty se ukládají jen do localStorage prohlížeče a posílají se v hlavičkách na server aplikace; proměnné prostředí slouží jako záloha.
+- Renderer **nikdy nevidí klíč**: hlavní proces vytvoří krátkodobý *ephemeral token* (`authTokens.create`, API `v1alpha`), do kterého je zamčena konfigurace (model, systémová instrukce, nástroje), a renderer s ním otevře WebSocket. Doporučení dokumentace pro klienta přímo připojeného k Live API je právě tento postup (klíč se do klienta nedává).
+- `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, přísná **CSP** (jen aplikace + `generativelanguage.googleapis.com`), vlastní protokol `komensky://` místo `file://`, mikrofon povolen jen pro vlastní origin, ověřování odesílatele každé IPC zprávy, zakázaná navigace i nová okna, vypnuté nebezpečné Electron *fuses*.
+- Jedna instance aplikace, paměť velikosti/polohy okna, `powerSaveBlocker` během lekce, logy přes `electron-log` (`%APPDATA%\komensky\logs\main.log`).
 
-## Proměnné prostředí
-Viz `.env.example`. Klíče existují jen na serveru (`GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`).
-Názvy modelů se nastavují přes `GEMINI_MODEL`, `GEMINI_CHECK_MODEL`, `ELEVENLABS_MODEL_ID`.
-Volitelné `ACCESS_CODE` zamkne aplikaci kódem (chrání kredit API před cizími).
+### Dlouhé relace
+Session resumption (handle z `sessionResumptionUpdate`), `goAway` → plynulé předání nového spojení, opětovné připojení s exponenciálním čekáním, offline režim, komprese kontextu (`slidingWindow`). Po obnově bez zachování kontextu se pošle systémová instrukce s **krátkým shrnutím stavu** a stavový automat znovu vydá pokyn aktuálního kroku.
 
-## Lokální vývoj
+## Vývoj
+
+```bash
+npm ci
+npm run dev            # Electron + Vite (živé načítání)
+npm run typecheck && npm test
+npm run test:e2e       # smoke test skutečné aplikace pod xvfb (Linux): scriptovaný „učitel“, bez Google
+npm run dist           # lokální build instalátoru (Windows; na CI to dělá Actions)
 ```
-npm i
-cp .env.example .env.local   # doplnit klíče; bez BLOB tokenu se data ukládají do ./.data
-npm run dev
+
+Testovací režim (`KOMENSKY_TEST=1`, jen v nebalené aplikaci) používá deterministický plán a scriptovaného učitele; v instalované aplikaci je nedostupný.
+
+## Vydání
+
+`npm run release -- patch` → verze, commit, tag `vX.Y.Z`, push → GitHub Actions sestaví NSIS instalátor (bez podpisu) a publikuje ho s `latest.yml`. Podrobnosti a test aktualizace: [návod správce](docs/PRUVODCE-SPRAVCE.md).
+
+## Struktura
+
 ```
-`MOCK_AI=1` spustí aplikaci s falešným Gemini/ElevenLabs (jen pro testování bez klíčů).
-`/api/health` ukazuje, co je nastavené (bez hodnot).
+content/curriculum.json   učivo (zdroj pravdy, součást aplikace)
+src/shared/               typy, stavový automat, prompty (česky), SRS, IPC kontrakt
+src/main/                 hlavní proces
+src/preload/              most do rendereru
+src/renderer/             UI
+tests/                    vitest (automat, databáze, plánovač) + e2e smoke test
+web-legacy/               původní webová verze (Next.js + Vercel), ponechána jen pro archiv
+```

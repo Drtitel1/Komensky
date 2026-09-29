@@ -1,0 +1,844 @@
+{
+  "schema": 1,
+  "subject": "Matematika pro 3. třídu",
+  "age": 8,
+  "stages": [
+    {
+      "id": 1,
+      "title": "Násobilka a dělení",
+      "description": "Násobení a dělení v oboru malé násobilky (do 100).",
+      "lessons": [
+        {
+          "id": "1.1",
+          "title": "Co je násobení? Násobilka dvou, tří a čtyř",
+          "objectives": [
+            "Vysvětlit násobení jako zkrácený zápis opakovaného sčítání.",
+            "Znát pojmy činitel a součin.",
+            "Vědět, že činitele lze vyměnit (3 · 4 = 4 · 3).",
+            "Zpaměti zvládnout násobilku dvou, tří a čtyř."
+          ],
+          "keyFacts": [
+            "4 + 4 + 4 = 3 · 4 = 12",
+            "Čísla, která násobíme, jsou činitelé; výsledek je součin.",
+            "3 · 4 = 4 · 3",
+            "Násobilka dvou: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20",
+            "Násobilka tří: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30",
+            "Násobilka čtyř: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Násobení je zkrácený zápis opakovaného sčítání stejných čísel. Součet 4 + 4 + 4 = 12 zapíšeme jako 3 · 4 = 12 a čteme „třikrát čtyři je dvanáct“. První číslo říká, kolikrát se druhé číslo opakuje."
+            },
+            {
+              "id": "Z2",
+              "text": "Čísla, která násobíme, se jmenují činitelé. Výsledek násobení se jmenuje součin. V zápisu 3 · 4 = 12 jsou činitelé 3 a 4 a součin je 12. Násobení zapisujeme tečkou uprostřed řádku: ·"
+            },
+            {
+              "id": "Z3",
+              "text": "Při násobení můžeme činitele vyměnit a součin se nezmění: 3 · 4 = 4 · 3 = 12. Díky tomu se musíme naučit méně příkladů. Například 2 · 7 je stejné jako 7 · 2 = 14."
+            },
+            {
+              "id": "Z4",
+              "text": "Násobilka dvou: 1 · 2 = 2, 2 · 2 = 4, 3 · 2 = 6, 4 · 2 = 8, 5 · 2 = 10, 6 · 2 = 12, 7 · 2 = 14, 8 · 2 = 16, 9 · 2 = 18, 10 · 2 = 20. Výsledky jsou všechna sudá čísla po dvou: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20."
+            },
+            {
+              "id": "Z5",
+              "text": "Násobilka tří: 1 · 3 = 3, 2 · 3 = 6, 3 · 3 = 9, 4 · 3 = 12, 5 · 3 = 15, 6 · 3 = 18, 7 · 3 = 21, 8 · 3 = 24, 9 · 3 = 27, 10 · 3 = 30. Výsledky rostou vždy o tři."
+            },
+            {
+              "id": "Z6",
+              "text": "Násobilka čtyř: 1 · 4 = 4, 2 · 4 = 8, 3 · 4 = 12, 4 · 4 = 16, 5 · 4 = 20, 6 · 4 = 24, 7 · 4 = 28, 8 · 4 = 32, 9 · 4 = 36, 10 · 4 = 40. Násobilka čtyř je dvojnásobek násobilky dvou: 6 · 2 = 12 a 6 · 4 = 24, tedy 12 + 12."
+            },
+            {
+              "id": "Z7",
+              "text": "Násobení nám pomáhá počítat stejné skupiny věcí. Když je na pěti talířích po třech jahodách, je jahod dohromady 5 · 3 = 15."
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "title": "Násobilka pěti a deseti, násobení nulou a jedničkou",
+          "objectives": [
+            "Zpaměti zvládnout násobilku pěti a deseti.",
+            "Vědět, co se stane při násobení číslem 1 a číslem 0.",
+            "Využít vztah mezi násobilkou pěti a deseti."
+          ],
+          "keyFacts": [
+            "Násobilka pěti: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 (končí 0 nebo 5)",
+            "Násobilka deseti: 10, 20, 30, 40, 50, 60, 70, 80, 90, 100",
+            "Číslo krát 1 je stejné číslo.",
+            "Číslo krát 0 je 0.",
+            "Pětinásobek je polovina desetinásobku."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Násobilka pěti: 1 · 5 = 5, 2 · 5 = 10, 3 · 5 = 15, 4 · 5 = 20, 5 · 5 = 25, 6 · 5 = 30, 7 · 5 = 35, 8 · 5 = 40, 9 · 5 = 45, 10 · 5 = 50. Výsledky vždy končí číslicí 0 nebo 5 a rostou o pět."
+            },
+            {
+              "id": "Z2",
+              "text": "Násobilka deseti: 1 · 10 = 10, 2 · 10 = 20, 3 · 10 = 30, 4 · 10 = 40, 5 · 10 = 50, 6 · 10 = 60, 7 · 10 = 70, 8 · 10 = 80, 9 · 10 = 90, 10 · 10 = 100. Když násobíme deseti, napíšeme za číslo nulu: 7 · 10 = 70."
+            },
+            {
+              "id": "Z3",
+              "text": "Násobilka pěti je polovina násobilky deseti. Například 6 · 10 = 60 a 6 · 5 = 30, což je polovina z 60."
+            },
+            {
+              "id": "Z4",
+              "text": "Když násobíme jedničkou, číslo se nezmění: 6 · 1 = 6 a 1 · 6 = 6. Jedna skupina o šesti věcech má šest věcí."
+            },
+            {
+              "id": "Z5",
+              "text": "Když násobíme nulou, výsledek je vždy nula: 6 · 0 = 0 a 0 · 6 = 0. Nula skupin nebo skupiny, ve kterých nic není, znamenají dohromady nic."
+            },
+            {
+              "id": "Z6",
+              "text": "Pětkami se počítá po pěti: 5, 10, 15, 20... Na hodinách ukazuje velká ručička po pěti minutách vždy o jednu číslici dál, takže 3 číslice na ciferníku znamenají 3 · 5 = 15 minut."
+            }
+          ]
+        },
+        {
+          "id": "1.3",
+          "title": "Násobilka šesti a sedmi",
+          "objectives": [
+            "Zpaměti zvládnout násobilku šesti a sedmi.",
+            "Využít vyměnění činitelů, aby se počet nových příkladů zmenšil.",
+            "Použít pomocný postup: šestkou jako pětkou plus jedna skupina."
+          ],
+          "keyFacts": [
+            "Násobilka šesti: 6, 12, 18, 24, 30, 36, 42, 48, 54, 60",
+            "Násobilka sedmi: 7, 14, 21, 28, 35, 42, 49, 56, 63, 70",
+            "Nové příklady u šestky: 6 · 6 = 36, 6 · 7 = 42, 6 · 8 = 48, 6 · 9 = 54",
+            "Nové příklady u sedmičky: 7 · 7 = 49, 7 · 8 = 56, 7 · 9 = 63"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Násobilka šesti: 1 · 6 = 6, 2 · 6 = 12, 3 · 6 = 18, 4 · 6 = 24, 5 · 6 = 30, 6 · 6 = 36, 7 · 6 = 42, 8 · 6 = 48, 9 · 6 = 54, 10 · 6 = 60. Výsledky rostou vždy o šest."
+            },
+            {
+              "id": "Z2",
+              "text": "Násobilka sedmi: 1 · 7 = 7, 2 · 7 = 14, 3 · 7 = 21, 4 · 7 = 28, 5 · 7 = 35, 6 · 7 = 42, 7 · 7 = 49, 8 · 7 = 56, 9 · 7 = 63, 10 · 7 = 70. Výsledky rostou vždy o sedm."
+            },
+            {
+              "id": "Z3",
+              "text": "Většinu příkladů už umíme z předchozích násobilek, protože činitele můžeme vyměnit. Například 6 · 3 = 3 · 6 = 18 a 7 · 4 = 4 · 7 = 28. Nové příklady u šestky jsou jen 6 · 6 = 36, 6 · 7 = 42, 6 · 8 = 48 a 6 · 9 = 54. Nové příklady u sedmičky jsou jen 7 · 7 = 49, 7 · 8 = 56 a 7 · 9 = 63."
+            },
+            {
+              "id": "Z4",
+              "text": "Pomocný postup pro šestku: šestkrát číslo je pětkrát číslo plus ještě jedno to číslo. Například 6 · 7 = 5 · 7 + 7 = 35 + 7 = 42."
+            },
+            {
+              "id": "Z5",
+              "text": "Pomocný postup pro sedmičku: sedmkrát číslo je pětkrát číslo plus dvakrát číslo. Například 7 · 8 = 5 · 8 + 2 · 8 = 40 + 16 = 56."
+            },
+            {
+              "id": "Z6",
+              "text": "Týden má 7 dní. Dva týdny mají 2 · 7 = 14 dní a čtyři týdny mají 4 · 7 = 28 dní."
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "title": "Násobilka osmi a devíti, celá násobilka",
+          "objectives": [
+            "Zpaměti zvládnout násobilku osmi a devíti.",
+            "Použít triky pro násobení devíti.",
+            "Zopakovat celou malou násobilku do 10 · 10."
+          ],
+          "keyFacts": [
+            "Násobilka osmi: 8, 16, 24, 32, 40, 48, 56, 64, 72, 80",
+            "Násobilka devíti: 9, 18, 27, 36, 45, 54, 63, 72, 81, 90",
+            "Nové příklady: 8 · 8 = 64, 8 · 9 = 72, 9 · 9 = 81",
+            "9 · n = 10 · n − n",
+            "Malá násobilka končí u 10 · 10 = 100."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Násobilka osmi: 1 · 8 = 8, 2 · 8 = 16, 3 · 8 = 24, 4 · 8 = 32, 5 · 8 = 40, 6 · 8 = 48, 7 · 8 = 56, 8 · 8 = 64, 9 · 8 = 72, 10 · 8 = 80. Výsledky rostou vždy o osm."
+            },
+            {
+              "id": "Z2",
+              "text": "Násobilka devíti: 1 · 9 = 9, 2 · 9 = 18, 3 · 9 = 27, 4 · 9 = 36, 5 · 9 = 45, 6 · 9 = 54, 7 · 9 = 63, 8 · 9 = 72, 9 · 9 = 81, 10 · 9 = 90. Výsledky rostou vždy o devět."
+            },
+            {
+              "id": "Z3",
+              "text": "Nové příklady, které ještě neznáme z dřívějších násobilek, jsou jen tři: 8 · 8 = 64, 8 · 9 = 72 a 9 · 9 = 81. Všechno ostatní už umíme, když využijeme výměnu činitelů. Například 8 · 3 = 3 · 8 = 24."
+            },
+            {
+              "id": "Z4",
+              "text": "Trik pro devítku: devětkrát číslo je desetkrát číslo minus jedno to číslo. Například 9 · 7 = 10 · 7 − 7 = 70 − 7 = 63."
+            },
+            {
+              "id": "Z5",
+              "text": "Druhý trik pro devítku: když sečteme číslice výsledku násobilky devíti od 1 · 9 do 9 · 9, vyjde vždy 9. Například 63 má číslice 6 + 3 = 9 a 54 má číslice 5 + 4 = 9."
+            },
+            {
+              "id": "Z6",
+              "text": "Trik pro osmičku: osmkrát číslo je dvakrát čtyřikrát číslo. Například 8 · 6 = 2 · (4 · 6) = 2 · 24 = 48. Výsledek násobilky osmi je dvojnásobek výsledku násobilky čtyř."
+            },
+            {
+              "id": "Z7",
+              "text": "Malá násobilka obsahuje všechny součiny dvou čísel od 1 do 10. Největší je 10 · 10 = 100. Když umíme násobilku dvou až deseti, umíme celou malou násobilku."
+            }
+          ]
+        },
+        {
+          "id": "1.5",
+          "title": "Dělení jako opak násobení",
+          "objectives": [
+            "Vysvětlit dělení jako rozdělení na stejné části a dělení po skupinách.",
+            "Znát pojmy dělenec, dělitel a podíl.",
+            "Využít násobilku při dělení a udělat zkoušku násobením.",
+            "Znát dělení jedničkou a nulou."
+          ],
+          "keyFacts": [
+            "12 : 3 = 4",
+            "Dělenec : dělitel = podíl",
+            "Z 3 · 4 = 12 plyne 12 : 3 = 4 i 12 : 4 = 3",
+            "Zkouška dělení: podíl · dělitel = dělenec",
+            "Číslo dělené jedničkou se nezmění; číslo dělené sebou je 1; nulou dělit nelze."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Dělení je rozdělení na stejné části. Když rozdělíme 12 bonbónů mezi 3 děti spravedlivě, dostane každé dítě 4 bonbóny. Zapisujeme 12 : 3 = 4 a čteme „dvanáct děleno třemi je čtyři“."
+            },
+            {
+              "id": "Z2",
+              "text": "Číslo, které dělíme, je dělenec. Číslo, kterým dělíme, je dělitel. Výsledek dělení je podíl. V zápisu 12 : 3 = 4 je dělenec 12, dělitel 3 a podíl 4."
+            },
+            {
+              "id": "Z3",
+              "text": "Dělení je opak násobení. Z příkladu 3 · 4 = 12 dostaneme dva příklady na dělení: 12 : 3 = 4 a 12 : 4 = 3. Při dělení si tedy pomáháme násobilkou."
+            },
+            {
+              "id": "Z4",
+              "text": "Existují dva druhy dělení. Prvním je rozdělení na stejné části: 12 bonbónů rozdělíme mezi 3 děti a každé dostane 4. Druhým je dělení po skupinách: 12 bonbónů rozdělíme do sáčků po 3 a vyjde 4 sáčky. Výpočet je v obou případech stejný: 12 : 3 = 4."
+            },
+            {
+              "id": "Z5",
+              "text": "Zkoušku dělení uděláme násobením: podíl krát dělitel se musí rovnat dělenci. U příkladu 12 : 3 = 4 zkontrolujeme 4 · 3 = 12."
+            },
+            {
+              "id": "Z6",
+              "text": "Číslo dělené jedničkou se nezmění: 8 : 1 = 8. Číslo dělené samo sebou je jedna: 8 : 8 = 1. Nula dělená jakýmkoli číslem (kromě nuly) je nula: 0 : 5 = 0. Nulou dělit nelze."
+            },
+            {
+              "id": "Z7",
+              "text": "Příklady dělení v oboru násobilky: 20 : 5 = 4, 18 : 2 = 9, 24 : 6 = 4, 56 : 7 = 8, 72 : 9 = 8, 81 : 9 = 9, 30 : 10 = 3."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Čísla do 1000",
+      "description": "Řády, čtení a zápis, porovnávání, zaokrouhlování, sčítání a odčítání do 1000.",
+      "lessons": [
+        {
+          "id": "2.1",
+          "title": "Čísla do 1000: stovky, desítky, jednotky",
+          "objectives": [
+            "Číst a zapisovat trojmístná čísla.",
+            "Rozložit číslo na stovky, desítky a jednotky.",
+            "Vědět, že 10 desítek je 100 a 10 stovek je 1000."
+          ],
+          "keyFacts": [
+            "10 jednotek = 1 desítka, 10 desítek = 1 stovka, 10 stovek = 1000",
+            "Trojmístná čísla jsou 100 až 999.",
+            "345 = 300 + 40 + 5",
+            "Nula ve středu čísla znamená prázdný řád: 306 má 0 desítek."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Číslice v čísle mají různou hodnotu podle místa, na kterém stojí. Zprava doleva jsou to jednotky, desítky a stovky. Deset jednotek je jedna desítka, deset desítek je jedna stovka a deset stovek je tisíc: 1000."
+            },
+            {
+              "id": "Z2",
+              "text": "Čísla od 100 do 999 mají tři číslice a říká se jim trojmístná čísla. Číslo 345 má 3 stovky, 4 desítky a 5 jednotek. Rozložíme ho takto: 345 = 300 + 40 + 5."
+            },
+            {
+              "id": "Z3",
+              "text": "Nula v čísle znamená, že v daném řádu nic není. Číslo 306 má 3 stovky, 0 desítek a 6 jednotek: 306 = 300 + 6. Číslo 450 má 4 stovky, 5 desítek a 0 jednotek."
+            },
+            {
+              "id": "Z4",
+              "text": "Čtení celých stovek: 100 sto, 200 dvě stě, 300 tři sta, 400 čtyři sta, 500 pět set, 600 šest set, 700 sedm set, 800 osm set, 900 devět set, 1000 tisíc."
+            },
+            {
+              "id": "Z5",
+              "text": "Trojmístné číslo čteme od stovek k jednotkám. Číslo 528 čteme pět set dvacet osm. Číslo 704 čteme sedm set čtyři. Číslo 999 čteme devět set devadesát devět."
+            },
+            {
+              "id": "Z6",
+              "text": "Nejmenší trojmístné číslo je 100 a největší trojmístné číslo je 999. Číslo o jedna větší než 999 je 1000."
+            },
+            {
+              "id": "Z7",
+              "text": "Počítání po stovkách: 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000. Počítání po desítkách: 310, 320, 330, 340..."
+            }
+          ]
+        },
+        {
+          "id": "2.2",
+          "title": "Porovnávání, číselná osa a zaokrouhlování",
+          "objectives": [
+            "Porovnat dvě čísla do 1000 znaky <, > a =.",
+            "Znázornit číslo na číselné ose.",
+            "Zaokrouhlit číslo na desítky a na stovky."
+          ],
+          "keyFacts": [
+            "Porovnáváme od nejvyššího řádu (od stovek).",
+            "Znak < znamená menší, > znamená větší.",
+            "Zaokrouhlování: číslice 0–4 dolů, číslice 5–9 nahoru.",
+            "Zaokrouhlení na desítky se řídí jednotkami, na stovky se řídí desítkami."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Trojmístná čísla porovnáváme od nejvyššího řádu, tedy od stovek. Větší je to číslo, které má víc stovek. Když mají stejně stovek, porovnáme desítky. Když mají stejně i desítek, porovnáme jednotky. Například 472 > 458, protože stovky jsou stejné (4), ale 7 desítek je víc než 5 desítek."
+            },
+            {
+              "id": "Z2",
+              "text": "Znaky pro porovnávání: znak < znamená „je menší než“, znak > znamená „je větší než“ a znak = znamená „je rovno“. Otevřená strana znaku míří k většímu číslu. Zapisujeme 250 < 520, 700 > 699 a 300 = 300."
+            },
+            {
+              "id": "Z3",
+              "text": "Číselná osa je přímka, na které jsou čísla seřazená podle velikosti. Čísla rostou zleva doprava. Číslo, které leží víc vpravo, je větší. Každé číslo má na ose své místo a mezi sousedními značkami je vždy stejná vzdálenost."
+            },
+            {
+              "id": "Z4",
+              "text": "Sousední čísla: číslo před číslem 500 je 499 a číslo po čísle 500 je 501. Sousední stovky čísla 450 jsou 400 a 500. Sousední desítky čísla 47 jsou 40 a 50."
+            },
+            {
+              "id": "Z5",
+              "text": "Zaokrouhlování na desítky: podíváme se na jednotky. Jsou-li jednotky 0, 1, 2, 3 nebo 4, zaokrouhlujeme dolů. Jsou-li jednotky 5, 6, 7, 8 nebo 9, zaokrouhlujeme nahoru. Například 42 zaokrouhlíme na 40, číslo 47 na 50 a číslo 45 na 50."
+            },
+            {
+              "id": "Z6",
+              "text": "Zaokrouhlování na stovky: podíváme se na desítky. Jsou-li desítky 0 až 4, zaokrouhlujeme dolů, jsou-li 5 až 9, zaokrouhlujeme nahoru. Například 340 zaokrouhlíme na 300, číslo 372 na 400, číslo 350 na 400 a číslo 649 na 600."
+            },
+            {
+              "id": "Z7",
+              "text": "Zaokrouhlené číslo používáme, když chceme jen přibližný výsledek. Znak přibližné rovnosti je ≈. Například 48 ≈ 50."
+            }
+          ]
+        },
+        {
+          "id": "2.3",
+          "title": "Sčítání a odčítání zpaměti do 1000",
+          "objectives": [
+            "Sčítat a odčítat celé stovky a desítky zpaměti.",
+            "Počítat s přechodem přes desítku a stovku.",
+            "Znát pojmy sčítanec, součet, menšenec, menšitel, rozdíl.",
+            "Zkoušet sčítání odčítáním a naopak."
+          ],
+          "keyFacts": [
+            "300 + 400 = 700, 900 − 200 = 700",
+            "Sčítanec + sčítanec = součet",
+            "Menšenec − menšitel = rozdíl",
+            "Zkouška: 45 + 30 = 75 a 75 − 30 = 45"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Celé stovky sčítáme a odčítáme jako obyčejná čísla, jen přidáme slovo stovky. Tři stovky plus čtyři stovky je sedm stovek: 300 + 400 = 700. Devět stovek minus dvě stovky je sedm stovek: 900 − 200 = 700."
+            },
+            {
+              "id": "Z2",
+              "text": "Celé desítky sčítáme podobně: 30 + 50 = 80, 70 + 60 = 130 a 120 − 40 = 80. K trojmístnému číslu přičteme desítky takto: 356 + 20 = 376 a 356 − 20 = 336."
+            },
+            {
+              "id": "Z3",
+              "text": "Při sčítání s přechodem přes desítku doplníme nejprve na celou desítku. Například 78 + 5: 78 + 2 = 80 a zbývá přičíst ještě 3, tedy 80 + 3 = 83."
+            },
+            {
+              "id": "Z4",
+              "text": "Přechod přes stovku počítáme podobně. Například 195 + 7: 195 + 5 = 200 a zbývá přičíst 2, tedy 202. Při odčítání 402 − 5 nejprve odečteme 2 do 400 a pak ještě 3, takže 402 − 5 = 397."
+            },
+            {
+              "id": "Z5",
+              "text": "Názvy čísel při sčítání: sčítanec + sčítanec = součet. V příkladu 45 + 30 = 75 jsou sčítanci 45 a 30 a součet je 75."
+            },
+            {
+              "id": "Z6",
+              "text": "Názvy čísel při odčítání: menšenec − menšitel = rozdíl. V příkladu 75 − 30 = 45 je menšenec 75, menšitel 30 a rozdíl 45."
+            },
+            {
+              "id": "Z7",
+              "text": "Sčítání a odčítání jsou opačné operace, proto se zkoušejí navzájem. Sčítání zkoušíme odčítáním: 45 + 30 = 75, protože 75 − 30 = 45. Odčítání zkoušíme sčítáním: 75 − 30 = 45, protože 45 + 30 = 75."
+            },
+            {
+              "id": "Z8",
+              "text": "Při sčítání můžeme sčítance vyměnit a součet se nezmění: 200 + 35 = 35 + 200 = 235. Při odčítání vyměnit čísla nelze: 7 − 3 není stejné jako 3 − 7."
+            }
+          ]
+        },
+        {
+          "id": "2.4",
+          "title": "Písemné sčítání a odčítání",
+          "objectives": [
+            "Zapsat čísla pod sebe podle řádů.",
+            "Písemně sečíst trojmístná čísla s přechodem přes desítku a stovku.",
+            "Písemně odečíst trojmístná čísla s půjčováním.",
+            "Provést zkoušku."
+          ],
+          "keyFacts": [
+            "Číslice píšeme pod sebe: jednotky pod jednotky, desítky pod desítky, stovky pod stovky.",
+            "Počítáme zprava, od jednotek.",
+            "258 + 167 = 425",
+            "421 − 156 = 265"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Při písemném sčítání a odčítání píšeme čísla pod sebe tak, aby jednotky byly pod jednotkami, desítky pod desítkami a stovky pod stovkami. Pod výsledek nakreslíme čáru. Počítáme vždy zprava, tedy od jednotek."
+            },
+            {
+              "id": "Z2",
+              "text": "Písemné sčítání 258 + 167. Jednotky: 8 + 7 = 15, napíšeme 5 a jednu desítku si pamatujeme. Desítky: 5 + 6 + 1 = 12, napíšeme 2 a jednu stovku si pamatujeme. Stovky: 2 + 1 + 1 = 4. Součet je 425."
+            },
+            {
+              "id": "Z3",
+              "text": "Když je součet číslic v některém řádu deset nebo víc, napíšeme jen jednotky z tohoto součtu a desítku přičteme k vyššímu řádu. Tomu říkáme přechod."
+            },
+            {
+              "id": "Z4",
+              "text": "Písemné odčítání 421 − 156. Jednotky: 1 − 6 nejde, proto si půjčíme jednu desítku (deset jednotek) a počítáme 11 − 6 = 5. Desítky: teď zbyla jen 1 desítka, 1 − 5 nejde, proto si půjčíme jednu stovku a počítáme 11 − 5 = 6. Stovky: zbyly 3 stovky, 3 − 1 = 2. Rozdíl je 265."
+            },
+            {
+              "id": "Z5",
+              "text": "Když odčítáme, nikdy nemůžeme v řádu odečíst větší číslici od menší. Musíme si půjčit jednu jednotku z vyššího řádu. Ten vyšší řád pak má o jedničku méně."
+            },
+            {
+              "id": "Z6",
+              "text": "Zkouška písemného sčítání: od součtu odečteme jednoho sčítance a musí vyjít druhý sčítanec. Zkouška písemného odčítání: k rozdílu přičteme menšitele a musí vyjít menšenec. Například 265 + 156 = 421."
+            },
+            {
+              "id": "Z7",
+              "text": "Další příklady: 347 + 285 = 632, 500 − 237 = 263, 613 + 189 = 802 a 800 − 456 = 344."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Dělení se zbytkem a slovní úlohy",
+      "description": "Dělení se zbytkem a řešení slovních úloh.",
+      "lessons": [
+        {
+          "id": "3.1",
+          "title": "Dělení se zbytkem",
+          "objectives": [
+            "Poznat, kdy se dělení neuskuteční beze zbytku.",
+            "Vypočítat podíl a zbytek v oboru násobilky.",
+            "Vědět, že zbytek je vždy menší než dělitel.",
+            "Udělat zkoušku dělení se zbytkem."
+          ],
+          "keyFacts": [
+            "14 : 4 = 3 zb. 2",
+            "Zbytek je vždy menší než dělitel.",
+            "Zkouška: 3 · 4 + 2 = 14",
+            "Dělení beze zbytku má zbytek 0."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Některá čísla se nedají rozdělit beze zbytku. Když chceme rozdělit 14 bonbónů do sáčků po 4, naplníme 3 sáčky a 2 bonbóny nám zbydou. Zapisujeme 14 : 4 = 3 zbytek 2, zkráceně 14 : 4 = 3 zb. 2."
+            },
+            {
+              "id": "Z2",
+              "text": "Postup při dělení se zbytkem: najdeme v násobilce dělitele nejbližší výsledek, který je menší než dělenec nebo se mu rovná. Počet násobků je podíl. Rozdíl mezi dělencem a tímto násobkem je zbytek. U příkladu 14 : 4 je nejbližší výsledek 12, protože 3 · 4 = 12. Zbytek je 14 − 12 = 2."
+            },
+            {
+              "id": "Z3",
+              "text": "Zbytek je vždy menší než dělitel. Když dělíme čtyřmi, může být zbytek jen 0, 1, 2 nebo 3. Kdyby zbytek byl 4 nebo víc, mohli bychom do dalšího sáčku ještě jednu skupinu nabrat."
+            },
+            {
+              "id": "Z4",
+              "text": "Když je zbytek nula, dělíme beze zbytku. Například 12 : 4 = 3 a zbytek je 0."
+            },
+            {
+              "id": "Z5",
+              "text": "Zkouška dělení se zbytkem: podíl vynásobíme dělitelem a přičteme zbytek. Musí vyjít dělenec. U příkladu 14 : 4 = 3 zb. 2 zkontrolujeme 3 · 4 + 2 = 12 + 2 = 14."
+            },
+            {
+              "id": "Z6",
+              "text": "Další příklady: 23 : 5 = 4 zb. 3, protože 4 · 5 = 20 a 23 − 20 = 3. Dále 29 : 6 = 4 zb. 5, protože 4 · 6 = 24 a 29 − 24 = 5. A také 30 : 7 = 4 zb. 2, protože 4 · 7 = 28 a 30 − 28 = 2."
+            },
+            {
+              "id": "Z7",
+              "text": "Příklad ze života: 17 jablek rozdělíme do košíků po 5. Naplníme 3 košíky, protože 3 · 5 = 15, a zbudou 2 jablka. Zapisujeme 17 : 5 = 3 zb. 2."
+            }
+          ]
+        },
+        {
+          "id": "3.2",
+          "title": "Slovní úlohy: o několik více či méně, několikrát více či méně",
+          "objectives": [
+            "Rozlišit „o několik“ (sčítání a odčítání) a „několikrát“ (násobení a dělení).",
+            "Zapsat řešení slovní úlohy: zápis, výpočet, odpověď.",
+            "Vyřešit úlohy typu „o kolik více“."
+          ],
+          "keyFacts": [
+            "o 5 více → sčítáme, o 5 méně → odčítáme",
+            "5krát více → násobíme, 5krát méně → dělíme",
+            "Postup: zápis, otázka, výpočet, odpověď celou větou",
+            "„O kolik více?“ → odčítáme"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Postup při řešení slovní úlohy: 1. pozorně přečteme text, 2. vypíšeme známé údaje a otázku, 3. vybereme početní operaci a spočítáme, 4. zkontrolujeme, zda výsledek dává smysl, 5. napíšeme odpověď celou větou."
+            },
+            {
+              "id": "Z2",
+              "text": "Slova „o několik více“ znamenají sčítání a „o několik méně“ znamenají odčítání. Petr má 12 kuliček a Jana má o 5 kuliček víc než Petr. Janě patří 12 + 5 = 17 kuliček. Kdyby měla o 5 méně, měla by 12 − 5 = 7 kuliček."
+            },
+            {
+              "id": "Z3",
+              "text": "Slova „několikrát více“ znamenají násobení a „několikrát méně“ znamenají dělení. Adam má 6 nálepek a Eva jich má 4krát víc. Eva má 4 · 6 = 24 nálepek. Kdyby Eva měla 24 nálepek a Adam jich měl 4krát méně, Adam by měl 24 : 4 = 6 nálepek."
+            },
+            {
+              "id": "Z4",
+              "text": "Rozdíl mezi „o“ a „krát“: „o 3 víc“ znamená přidat 3, ale „3krát víc“ znamená vzít trojnásobek. Když má Anna 5 korálků, o 3 víc je 5 + 3 = 8 korálků, ale 3krát víc je 3 · 5 = 15 korálků."
+            },
+            {
+              "id": "Z5",
+              "text": "Otázka „o kolik je jedno číslo větší než druhé“ se řeší odčítáním. Petr má 17 kuliček a Jana 12 kuliček. O kolik má Petr víc? Vypočítáme 17 − 12 = 5. Petr má o 5 kuliček víc."
+            },
+            {
+              "id": "Z6",
+              "text": "Odpověď píšeme celou větou a s jednotkou nebo s tím, co jsme počítali. Například: Jana má 17 kuliček."
+            }
+          ]
+        },
+        {
+          "id": "3.3",
+          "title": "Slovní úlohy o dvou krocích",
+          "objectives": [
+            "Poznat úlohu, která se řeší dvěma výpočty.",
+            "Najít mezivýsledek a pak konečný výsledek.",
+            "Zkontrolovat výsledek zpětným dosazením do zadání."
+          ],
+          "keyFacts": [
+            "Dvoukroková úloha: nejdřív mezivýsledek, potom výsledek.",
+            "4 řady po 6 dětech: 4 · 6 = 24",
+            "Výsledek zkontrolujeme dosazením do zadání a odhadem."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Některé slovní úlohy nejde vyřešit jedním výpočtem. Musíme nejdřív zjistit mezivýsledek a pak pomocí něj dopočítat výsledek. Takovým úlohám říkáme úlohy o dvou krocích."
+            },
+            {
+              "id": "Z2",
+              "text": "Příklad: V sále jsou 4 řady po 6 židlích. Na 3 židlích nikdo nesedí. Kolik židlí je obsazených? První krok: všech židlí je 4 · 6 = 24. Druhý krok: obsazených je 24 − 3 = 21. Odpověď: Obsazených je 21 židlí."
+            },
+            {
+              "id": "Z3",
+              "text": "Příklad: Máma koupila 3 sešity po 12 korunách a tužku za 8 korun. Kolik korun zaplatila? První krok: sešity stály 3 · 12 = 36 korun. Druhý krok: dohromady zaplatila 36 + 8 = 44 korun. Odpověď: Zaplatila 44 korun."
+            },
+            {
+              "id": "Z4",
+              "text": "Příklad: Ve třídě je 24 dětí. Rozdělíme je do skupin po 6 dětech a každá skupina dostane 2 míče. Kolik míčů je potřeba? První krok: skupin je 24 : 6 = 4. Druhý krok: míčů je 4 · 2 = 8. Odpověď: Je potřeba 8 míčů."
+            },
+            {
+              "id": "Z5",
+              "text": "Kontrola výsledku: nejdřív odhadneme, jak velký výsledek má být. Potom výsledek dosadíme zpátky do zadání a zjistíme, jestli sedí. U příkladu se židlemi: 21 obsazených plus 3 volné je 24 židlí a 4 řady po 6 židlích je také 24."
+            },
+            {
+              "id": "Z6",
+              "text": "Do zápisu úlohy o dvou krocích píšeme oba výpočty pod sebe, každý s otázkou nebo poznámkou, co jsme jím zjistili. Na konci napíšeme odpověď celou větou."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Měření a jednotky",
+      "description": "Délka, hmotnost, objem, čas a peníze.",
+      "lessons": [
+        {
+          "id": "4.1",
+          "title": "Jednotky délky",
+          "objectives": [
+            "Znát jednotky délky mm, cm, dm, m, km.",
+            "Převádět mezi jednotkami délky.",
+            "Změřit délku pravítkem od nuly."
+          ],
+          "keyFacts": [
+            "1 cm = 10 mm, 1 dm = 10 cm, 1 m = 10 dm = 100 cm, 1 km = 1000 m",
+            "3 m = 300 cm",
+            "Pravítko přikládáme tak, aby začátek úsečky byl na nule."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Délku měříme v jednotkách: milimetr (mm), centimetr (cm), decimetr (dm), metr (m) a kilometr (km). Malé věci měříme v milimetrech a centimetrech, například tužku. Pokoj měříme v metrech a vzdálenost mezi městy v kilometrech."
+            },
+            {
+              "id": "Z2",
+              "text": "Vztahy mezi jednotkami: 1 cm = 10 mm, 1 dm = 10 cm, 1 m = 10 dm, 1 m = 100 cm a 1 km = 1000 m."
+            },
+            {
+              "id": "Z3",
+              "text": "Při převádění větší jednotky na menší násobíme. Například 3 m = 3 · 100 cm = 300 cm a 4 dm = 4 · 10 cm = 40 cm a 5 cm = 5 · 10 mm = 50 mm. Kilometry na metry: 2 km = 2 · 1000 m = 2000 m."
+            },
+            {
+              "id": "Z4",
+              "text": "Při převádění menší jednotky na větší dělíme. Například 200 cm = 200 : 100 m = 2 m a 60 mm = 60 : 10 cm = 6 cm. Číslo 250 cm můžeme zapsat jako 2 m 50 cm."
+            },
+            {
+              "id": "Z5",
+              "text": "Pravítko přikládáme tak, aby začátek měřené úsečky byl přesně na nule. Konec úsečky nám ukáže délku. Na pravítku jsou velké čárky pro centimetry a malé čárky pro milimetry."
+            },
+            {
+              "id": "Z6",
+              "text": "Délky v jedné jednotce sčítáme a odčítáme jako obyčejná čísla: 30 cm + 45 cm = 75 cm. Když jsou jednotky různé, musíme je nejdřív převést na stejnou jednotku: 1 m + 20 cm = 100 cm + 20 cm = 120 cm."
+            }
+          ]
+        },
+        {
+          "id": "4.2",
+          "title": "Hmotnost a objem",
+          "objectives": [
+            "Znát jednotky hmotnosti gram a kilogram a jednotky objemu litr a decilitr.",
+            "Převádět g na kg a l na dl.",
+            "Znát polovinu a čtvrtinu kilogramu a litru."
+          ],
+          "keyFacts": [
+            "1 kg = 1000 g",
+            "půl kilogramu = 500 g, čtvrt kilogramu = 250 g",
+            "1 l = 10 dl",
+            "půl litru = 5 dl"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Hmotnost měříme na váze. Jednotky hmotnosti jsou gram (g) a kilogram (kg). Jeden kilogram má tisíc gramů: 1 kg = 1000 g."
+            },
+            {
+              "id": "Z2",
+              "text": "Převádění hmotnosti: 2 kg = 2 · 1000 g = 2000 g a 3000 g = 3 kg. Číslo 1500 g zapíšeme jako 1 kg 500 g."
+            },
+            {
+              "id": "Z3",
+              "text": "Půl kilogramu je polovina z tisíce gramů, tedy 500 g. Čtvrt kilogramu je čtvrtina z tisíce gramů, tedy 250 g. Dvě čtvrtě kilogramu jsou 500 g a tři čtvrtě kilogramu jsou 750 g."
+            },
+            {
+              "id": "Z4",
+              "text": "Objem tekutin měříme v litrech (l) a decilitrech (dl). Jeden litr má deset decilitrů: 1 l = 10 dl. Například 3 l = 30 dl a 50 dl = 5 l."
+            },
+            {
+              "id": "Z5",
+              "text": "Půl litru je 5 dl a čtvrt litru je 2 dl a půl decilitru. Jeden litr a půl litru dohromady jsou 15 dl."
+            },
+            {
+              "id": "Z6",
+              "text": "Hmotnost i objem sčítáme a odčítáme s jednotkami stejného druhu: 300 g + 250 g = 550 g a 2 l − 5 dl = 20 dl − 5 dl = 15 dl. Kilogram a gram nebo litr a decilitr nejdřív převedeme na stejnou jednotku."
+            },
+            {
+              "id": "Z7",
+              "text": "Hmotnost a objem nejsou totéž. Hmotnost říká, jak je věc těžká. Objem říká, kolik tekutiny se vejde do nádoby."
+            }
+          ]
+        },
+        {
+          "id": "4.3",
+          "title": "Čas a peníze",
+          "objectives": [
+            "Znát vztahy mezi jednotkami času.",
+            "Číst čas na hodinách včetně „čtvrt na“, „půl“ a „třičtvrtě na“.",
+            "Znát české mince a bankovky a počítat s penězi."
+          ],
+          "keyFacts": [
+            "1 h = 60 min, 1 min = 60 s, 1 den = 24 h, 1 týden = 7 dní, 1 rok = 12 měsíců",
+            "čtvrt na tři = 2:15, půl třetí = 2:30, třičtvrtě na tři = 2:45",
+            "Mince: 1, 2, 5, 10, 20, 50 Kč; bankovky: 100, 200, 500, 1000, 2000, 5000 Kč"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Vztahy mezi jednotkami času: 1 hodina (h) = 60 minut (min), 1 minuta = 60 sekund (s), 1 den = 24 hodin, 1 týden = 7 dní a 1 rok = 12 měsíců. Rok má 365 dní a přestupný rok má 366 dní."
+            },
+            {
+              "id": "Z2",
+              "text": "Půl hodiny je 30 minut a čtvrt hodiny je 15 minut. Tři čtvrtě hodiny je 45 minut."
+            },
+            {
+              "id": "Z3",
+              "text": "Dny v týdnu: pondělí, úterý, středa, čtvrtek, pátek, sobota, neděle. Měsíce v roce: leden, únor, březen, duben, květen, červen, červenec, srpen, září, říjen, listopad, prosinec."
+            },
+            {
+              "id": "Z4",
+              "text": "Čas na hodinách říkáme několika způsoby. Čas 2:15 říkáme „čtvrt na tři“. Čas 2:30 říkáme „půl třetí“. Čas 2:45 říkáme „třičtvrtě na tři“. Čas 3:00 říkáme „tři hodiny“. Slova čtvrt, půl a třičtvrtě se vždy vztahují k příští hodině."
+            },
+            {
+              "id": "Z5",
+              "text": "Krátká ručička na hodinách ukazuje hodiny a dlouhá ručička ukazuje minuty. Když dlouhá ručička ukazuje na číslici 12, je celá hodina. Na číslici 3 je čtvrt hodiny po celé (15 minut), na číslici 6 je půl hodiny (30 minut) a na číslici 9 je 45 minut."
+            },
+            {
+              "id": "Z6",
+              "text": "Odpoledne se čas často zapisuje ve 24hodinovém tvaru: po 12. hodině pokračujeme 13, 14, 15... až 24. Například 15:00 je tři hodiny odpoledne a 18:30 je půl sedmé večer."
+            },
+            {
+              "id": "Z7",
+              "text": "Platíme českými korunami (Kč). Mince mají hodnoty 1 Kč, 2 Kč, 5 Kč, 10 Kč, 20 Kč a 50 Kč. Bankovky mají hodnoty 100 Kč, 200 Kč, 500 Kč, 1000 Kč, 2000 Kč a 5000 Kč. Jedna koruna se dělí na 100 haléřů."
+            },
+            {
+              "id": "Z8",
+              "text": "Když platíme větší částkou, než stojí zboží, prodavač nám vrátí rozdíl. Zaplatíme-li za věc za 37 Kč bankovkou 50 Kč, dostaneme zpět 50 − 37 = 13 Kč."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Geometrie",
+      "description": "Body, přímky, úsečky, geometrické tvary a obvod.",
+      "lessons": [
+        {
+          "id": "5.1",
+          "title": "Bod, přímka, polopřímka a úsečka",
+          "objectives": [
+            "Rozlišit bod, přímku, polopřímku a úsečku.",
+            "Správně označovat geometrické útvary písmeny.",
+            "Narýsovat a změřit úsečku."
+          ],
+          "keyFacts": [
+            "Bod označujeme velkým tiskacím písmenem: A.",
+            "Přímka nemá začátek ani konec; označujeme ji malým písmenem: p.",
+            "Polopřímka má začátek, ale nemá konec.",
+            "Úsečka má začátek i konec a má délku: AB."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Bod je nejmenší geometrický útvar. Značíme ho křížkem a označujeme ho velkým tiskacím písmenem, například bod A nebo bod B."
+            },
+            {
+              "id": "Z2",
+              "text": "Přímka je rovná čára, která nemá začátek ani konec. Pokračuje na obě strany donekonečna. Rýsujeme ji ostrou tužkou podle pravítka a označujeme ji malým písmenem, například přímka p. Obvykle ji kreslíme přes celou šířku papíru."
+            },
+            {
+              "id": "Z3",
+              "text": "Polopřímka je rovná čára, která má začátek, ale nemá konec. Začíná v bodě a pokračuje jedním směrem donekonečna. Začátek polopřímky označíme velkým písmenem, například polopřímka AB začíná v bodě A."
+            },
+            {
+              "id": "Z4",
+              "text": "Úsečka je rovná čára, která má začátek i konec. Její krajní body označíme velkými písmeny, například úsečka AB. Úsečka má délku, kterou můžeme změřit pravítkem."
+            },
+            {
+              "id": "Z5",
+              "text": "Dvěma různými body vždy prochází právě jedna přímka. Když dva body A a B spojíme pravítkem, dostaneme buď úsečku AB, když se zastavíme v bodech, nebo přímku AB, když čáru prodloužíme na obě strany."
+            },
+            {
+              "id": "Z6",
+              "text": "Rýsování úsečky délky 5 cm: ostrou tužkou označíme bod A, přiložíme pravítko tak, aby nula byla přesně v bodě A, u značky 5 cm označíme bod B a bod A spojíme s bodem B podle pravítka. Úsečka AB má délku 5 cm."
+            },
+            {
+              "id": "Z7",
+              "text": "Rýsujeme vždy ostrou tužkou a s pravítkem. Čáry nekreslíme od ruky, protože by nebyly rovné."
+            }
+          ]
+        },
+        {
+          "id": "5.2",
+          "title": "Rovnoběžky, různoběžky a základní tvary",
+          "objectives": [
+            "Rozlišit rovnoběžky, různoběžky a kolmice.",
+            "Poznat trojúhelník, čtverec, obdélník, kružnici a kruh.",
+            "Znát pojmy poloměr a průměr kružnice."
+          ],
+          "keyFacts": [
+            "Rovnoběžky se nikdy neprotnou.",
+            "Různoběžky mají jeden společný bod – průsečík.",
+            "Kolmice jsou různoběžky, které svírají pravý úhel.",
+            "Čtverec: 4 stejné strany a 4 pravé úhly. Obdélník: 4 pravé úhly, protější strany stejné.",
+            "Průměr = 2 · poloměr"
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Rovnoběžky jsou dvě přímky, které se nikdy neprotnou. Mají celou dobu stejnou vzdálenost. Kolejnice u vlaku jsou rovnoběžné."
+            },
+            {
+              "id": "Z2",
+              "text": "Různoběžky jsou dvě přímky, které se protnou v jednom bodě. Tomuto společnému bodu říkáme průsečík."
+            },
+            {
+              "id": "Z3",
+              "text": "Kolmice jsou zvláštní různoběžky. Když se protnou, svírají pravý úhel. Pravý úhel poznáme podle rohu trojúhelníku s ryskou nebo podle rohu papíru. Označujeme ho čtverečkem v úhlu."
+            },
+            {
+              "id": "Z4",
+              "text": "Trojúhelník má 3 strany, 3 vrcholy a 3 úhly. Čtyřúhelník má 4 strany, 4 vrcholy a 4 úhly. Čtverec i obdélník jsou čtyřúhelníky."
+            },
+            {
+              "id": "Z5",
+              "text": "Čtverec má všechny čtyři strany stejně dlouhé a čtyři pravé úhly. Obdélník má čtyři pravé úhly a protější strany stejně dlouhé. Každý čtverec je zároveň obdélník, ale ne každý obdélník je čtverec."
+            },
+            {
+              "id": "Z6",
+              "text": "Kružnice je zakřivená čára, jejíž všechny body jsou stejně daleko od středu. Rýsujeme ji kružítkem. Kruh je plocha uvnitř kružnice. Kružnice je jen čára, kruh je celá plocha."
+            },
+            {
+              "id": "Z7",
+              "text": "Poloměr kružnice je vzdálenost od středu kružnice k bodu na kružnici. Průměr je úsečka, která prochází středem a spojuje dva body na kružnici. Průměr je dvakrát delší než poloměr: průměr = 2 · poloměr. Když je poloměr 3 cm, je průměr 6 cm."
+            }
+          ]
+        },
+        {
+          "id": "5.3",
+          "title": "Obvod trojúhelníku, čtverce a obdélníku",
+          "objectives": [
+            "Vysvětlit, co je obvod.",
+            "Vypočítat obvod trojúhelníku, čtverce a obdélníku sečtením stran.",
+            "Použít zkrácený výpočet pomocí násobení."
+          ],
+          "keyFacts": [
+            "Obvod je součet délek všech stran.",
+            "Čtverec o straně a: o = 4 · a",
+            "Obdélník o stranách a, b: o = 2 · a + 2 · b",
+            "Všechny strany musí být ve stejných jednotkách."
+          ],
+          "passages": [
+            {
+              "id": "Z1",
+              "text": "Obvod je délka čáry kolem celého útvaru. U útvaru s rovnými stranami je obvod součet délek všech stran. Obvod značíme malým písmenem o."
+            },
+            {
+              "id": "Z2",
+              "text": "Obvod trojúhelníku se stranami a, b, c je o = a + b + c. Například trojúhelník se stranami 5 cm, 6 cm a 7 cm má obvod 5 + 6 + 7 = 18 cm."
+            },
+            {
+              "id": "Z3",
+              "text": "Čtverec má čtyři stejné strany. Obvod čtverce se stranou a je o = a + a + a + a = 4 · a. Čtverec o straně 7 cm má obvod 4 · 7 = 28 cm."
+            },
+            {
+              "id": "Z4",
+              "text": "Obdélník má dvě dvojice stejných stran. Obvod obdélníku o stranách a a b je o = a + b + a + b = 2 · a + 2 · b. Obdélník o stranách 6 cm a 3 cm má obvod 6 + 3 + 6 + 3 = 18 cm, nebo 2 · 6 + 2 · 3 = 12 + 6 = 18 cm."
+            },
+            {
+              "id": "Z5",
+              "text": "Než sečteme strany, musí mít všechny stejnou jednotku. Když je jedna strana v centimetrech a druhá v milimetrech, jednu z nich nejdřív převedeme. Obvod píšeme s jednotkou délky, například cm nebo m."
+            },
+            {
+              "id": "Z6",
+              "text": "Příklad ze života: zahrada tvaru obdélníku má strany 10 m a 4 m. Plot kolem celé zahrady bude dlouhý 2 · 10 + 2 · 4 = 20 + 8 = 28 m. Obvod měříme v jednotkách délky, ne v jednotkách obsahu."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
