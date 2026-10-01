@@ -41,6 +41,13 @@ export function buildLiveConfig(o: { subject: string; age: number; lesson: Lesso
     tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
     inputAudioTranscription: {},
     outputAudioTranscription: {},
+    // Push-to-talk: no server-side voice detection. The app brackets every answer with activityStart / activityEnd,
+    // and only audio sent in between counts. A new activityStart interrupts the tutor (START_OF_ACTIVITY_INTERRUPTS).
+    realtimeInputConfig: {
+      automaticActivityDetection: { disabled: true },
+      activityHandling: "START_OF_ACTIVITY_INTERRUPTS",
+      turnCoverage: "TURN_INCLUDES_ONLY_ACTIVITY",
+    },
   };
   if (o.settings.VOICE) config.speechConfig = { voiceConfig: { prebuiltVoiceConfig: { voiceName: o.settings.VOICE } } };
   return config;

@@ -59,7 +59,7 @@ export const T = {
   feedbackMax: 120,
   reviewMax: 330,
   summaryMax: 90,
-  noiseCap: 10,
+  noiseCap: 75, // push-to-talk is capped at 60 s on the UI side
 } as const;
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();

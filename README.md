@@ -3,10 +3,12 @@
 Samostatná desktopová aplikace (Electron, Windows x64) pro jednoho žáka. **Žádný server, žádný Vercel, žádná hostovaná databáze.**
 Vše běží lokálně na počítači; jediné externí služby jsou **Gemini API** (učitel hlasem + příprava lekcí) a **GitHub Releases** (automatické aktualizace).
 
-- Učitel mluví česky (Gemini 3.8 Live, obousměrný zvuk), ptá se, poslouchá odpovědi a opravuje je. Lekce trvá 30–45 minut.
+- Učitel mluví česky (Gemini 3.8 Live, obousměrný zvuk), ptá se a opravuje odpovědi. **Push-to-talk:** žačka mluví, jen když drží velké tlačítko nebo mezerník; stisk učitele okamžitě přeruší. Lekce trvá 30–45 minut.
 - Lekce řídí **stavový automat v aplikaci** (`src/shared/engine.ts`): `WARMUP → (EXPLAIN → CHECK → FEEDBACK) × 5–8 → FINAL_QUIZ → SUMMARY`, při výsledku pod 75 % `REVIEW → RETEST`. Aplikace, ne model, je zdrojem pravdy o postupu.
 - Učivo je přibaleno v aplikaci (`content/curriculum.json`, 5 etap / 18 lekcí). Plán každé lekce (5–8 částí, kontrolní otázky s klíči, závěrečný kvíz 10–15 otázek) vygeneruje `PREP_MODEL` jednou, ověří druhým průchodem (fact-check) a uloží do SQLite.
 - Postup, odpovědi, opakování (spaced repetition), plány a přepisy jsou v SQLite (`%APPDATA%\komensky\komensky.db`) s bezpečnými migracemi.
+
+Vydání nové verze: [RELEASING.md](RELEASING.md)
 
 Návody: [pro žačku](docs/PRUVODCE-SESTRA.md) · [pro správce (klíč, vydání, zálohy, cena)](docs/PRUVODCE-SPRAVCE.md)
 
@@ -22,8 +24,11 @@ Návody: [pro žačku](docs/PRUVODCE-SESTRA.md) · [pro správce (klíč, vydán
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, přísná **CSP** (jen aplikace + `generativelanguage.googleapis.com`), vlastní protokol `komensky://` místo `file://`, mikrofon povolen jen pro vlastní origin, ověřování odesílatele každé IPC zprávy, zakázaná navigace i nová okna, vypnuté nebezpečné Electron *fuses*.
 - Jedna instance aplikace, paměť velikosti/polohy okna, `powerSaveBlocker` během lekce, logy přes `electron-log` (`%APPDATA%\komensky\logs\main.log`).
 
+### Push-to-talk
+`realtimeInputConfig.automaticActivityDetection.disabled = true` (zamčeno v dočasném tokenu), `activityHandling: START_OF_ACTIVITY_INTERRUPTS`, `turnCoverage: TURN_INCLUDES_ONLY_ACTIVITY`. Aplikace posílá `activityStart` při stisku a `activityEnd` při puštění; zvuk z mikrofonu odchází **jen** mezi nimi (brána v `MicCapture.capturing`). Stisk při mluvení učitele okamžitě vyprázdní přehrávání a server přeruší generování.
+
 ### Dlouhé relace
-Session resumption (handle z `sessionResumptionUpdate`), `goAway` → plynulé předání nového spojení, opětovné připojení s exponenciálním čekáním, offline režim, komprese kontextu (`slidingWindow`). Po obnově bez zachování kontextu se pošle systémová instrukce s **krátkým shrnutím stavu** a stavový automat znovu vydá pokyn aktuálního kroku.
+Session resumption (handle z `sessionResumptionUpdate`), `goAway` → plynulé předání nového spojení, opětovné připojení s exponenciálním čekáním, **watchdog** pro tiše mrtvé spojení (25 s bez odpovědi), ruční „Zkusit znovu“, offline režim, komprese kontextu (`slidingWindow`). Po obnově bez zachování kontextu se pošle systémová instrukce s **krátkým shrnutím stavu** a stavový automat znovu vydá pokyn aktuálního kroku.
 
 ## Vývoj
 

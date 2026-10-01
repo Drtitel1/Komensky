@@ -18,32 +18,45 @@ export function bytesToB64(bytes: Uint8Array): string {
 export interface MicHandlers {
   onChunk: (b64: string) => void;
   onLevel: (rms: number) => void;
+  /** the microphone was unplugged / disabled while in use */
+  onEnded?: () => void;
 }
 
 export class MicCapture {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
   private node: AudioWorkletNode | null = null;
-  muted = false;
+  /** push-to-talk gate: audio is forwarded ONLY while this is true (the button is held) */
+  capturing = false;
+  alive = false;
 
   async start(h: MicHandlers) {
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     // a 16 kHz context: Chromium resamples the microphone for us
+    const track = this.stream.getAudioTracks()[0];
+    this.alive = true;
+    track?.addEventListener("ended", () => {
+      this.alive = false;
+      this.capturing = false;
+      h.onEnded?.();
+    });
     this.ctx = new AudioContext({ sampleRate: INPUT_RATE });
     await this.ctx.audioWorklet.addModule(new URL("pcm-worklet.js", document.baseURI).href);
     const src = this.ctx.createMediaStreamSource(this.stream);
     this.node = new AudioWorkletNode(this.ctx, "pcm-capture");
     this.node.port.onmessage = (e: MessageEvent<{ pcm: ArrayBuffer; rms: number }>) => {
-      h.onLevel(this.muted ? 0 : e.data.rms);
-      if (!this.muted) h.onChunk(bytesToB64(new Uint8Array(e.data.pcm)));
+      h.onLevel(this.capturing ? e.data.rms : 0);
+      if (this.capturing) h.onChunk(bytesToB64(new Uint8Array(e.data.pcm)));
     };
     src.connect(this.node);
     if (this.ctx.state === "suspended") await this.ctx.resume();
   }
 
   stop() {
+    this.capturing = false;
+    this.alive = false;
     try {
       this.node?.disconnect();
     } catch {
@@ -63,7 +76,7 @@ export class Playback {
   private gain = this.ctx.createGain();
   private next = 0;
   private sources = new Set<AudioBufferSourceNode>();
-  lastChunkAt = 0;
+  lastChunkAt = -Infinity;
 
   constructor() {
     this.gain.connect(this.ctx.destination);
@@ -107,6 +120,7 @@ export class Playback {
     }
     this.sources.clear();
     this.next = 0;
+    this.lastChunkAt = -Infinity; // the tutor counts as silent immediately (barge-in)
   }
 
   async suspend() {

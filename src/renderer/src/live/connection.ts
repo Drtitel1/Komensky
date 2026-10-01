@@ -1,9 +1,11 @@
 import type { LiveTokenInfo } from "@shared/ipc";
 import { connectLive, type LiveEvents, type LiveLike, type ToolCall } from "./session";
 
+export const WATCHDOG_MS = 25_000;
+
 export type ConnState = "idle" | "connecting" | "open" | "reconnecting" | "offline" | "failed" | "closed";
 
-export interface ConnCallbacks extends Omit<LiveEvents, "onClose" | "onSetup" | "onResumptionHandle" | "onGoAway"> {
+export interface ConnCallbacks extends Omit<LiveEvents, "onClose" | "onSetup" | "onResumptionHandle" | "onGoAway" | "onMessage"> {
   onState(s: ConnState, message?: string): void;
   /** setup finished on a NEW model context (first connection, or resumption impossible): the engine must (re-)send the current instruction */
   onFreshSession(): void;
@@ -19,9 +21,13 @@ export class LiveConnection {
   private wantOpen = false;
   private retries = 0;
   private reconnecting = false;
+  private reconnectAgain = false; // a close arrived while a reconnect was already running: run once more afterwards
   private state: ConnState = "idle";
   private goAwayTimer?: ReturnType<typeof setTimeout>;
   private queue: string[] = [];
+  private lastMessageAt = Date.now();
+  private awaitingSince = 0; // we sent something that must be answered (control message / end of an answer)
+  private watchdog?: ReturnType<typeof setInterval>;
   private onlineHandler = () => {
     if (this.wantOpen && this.state === "offline") void this.reconnect("online");
   };
@@ -44,6 +50,18 @@ export class LiveConnection {
 
   async open() {
     this.wantOpen = true;
+    // A silently dead connection (cable pulled, Wi-Fi gone) never fires "close". If we asked the teacher for something
+    // and NOTHING came back for WATCHDOG_MS, assume the socket is dead and reconnect.
+    this.watchdog = setInterval(() => {
+      if (this.state === "open" && this.awaitingSince && Date.now() - this.awaitingSince > WATCHDOG_MS) {
+        console.warn("live watchdog: no answer, reconnecting");
+        this.awaitingSince = 0;
+        const s = this.session;
+        this.session = null;
+        s?.close();
+        void this.reconnect("watchdog");
+      }
+    }, 3000);
     this.set("connecting");
     await this.establish(undefined, true);
   }
@@ -63,9 +81,15 @@ export class LiveConnection {
     }
     try {
       let sess: LiveLike | null = null;
+      let gotSetup = false;
       const events: LiveEvents = {
         ...this.cb,
+        onMessage: () => {
+          this.lastMessageAt = Date.now();
+          this.awaitingSince = 0;
+        },
         onSetup: () => {
+          gotSetup = true;
           this.retries = 0;
           this.set("open");
           const queued = this.queue.splice(0);
@@ -77,14 +101,25 @@ export class LiveConnection {
         },
         onResumptionHandle: (h) => (this.handle = h),
         onGoAway: (ms) => this.onGoAway(ms),
-        onClose: (info) => sess && this.onClosed(info, sess),
+        // a session that was opened WITH a handle and closed before its setup finished: the handle was probably rejected
+        onClose: (info) => sess && this.onClosed(info, sess, !!handle && !gotSetup),
       };
       const s = await connectLive(t.info, handle, events);
       sess = s;
+      if (s.early) {
+        // closed while connecting (e.g. the server rejects the resumption handle): decide here, we are still inside a reconnect.
+        // The previous session (if any, e.g. during a goAway hand-over) is left untouched.
+        console.warn("live closed during connect", s.early);
+        if (handle) {
+          this.handle = undefined;
+          return this.establish(undefined, first);
+        }
+        if (first) return this.set("failed", `Nepodařilo se navázat živé spojení (${s.early.reason || s.early.error || s.early.code}).`);
+        return this.scheduleRetry(s.early.reason || s.early.error || "spojení bylo ukončeno");
+      }
       const old = this.session;
       this.session = s;
       old?.close();
-      if (s.early) return this.onClosed(s.early, s);
     } catch (e) {
       const msg = (e as Error).message || "spojení se nezdařilo";
       if (handle) {
@@ -103,12 +138,11 @@ export class LiveConnection {
     this.goAwayTimer = setTimeout(() => void this.reconnect("goaway"), Math.min(2000, Math.max(0, ms / 3)));
   }
 
-  private onClosed(info: { code?: number; reason?: string; error?: string }, s: LiveLike) {
+  private onClosed(info: { code?: number; reason?: string; error?: string }, s: LiveLike, handleRejected = false) {
     if (s !== this.session) return; // an old session closing after hand-over
     if (!this.wantOpen) return;
     console.warn("live closed", info);
-    // closed very shortly after opening with a handle -> the handle is probably rejected
-    if (Date.now() - s.openedAt < 3000 && this.handle) this.handle = undefined;
+    if (handleRejected) this.handle = undefined;
     void this.reconnect("closed");
   }
 
@@ -123,7 +157,11 @@ export class LiveConnection {
   }
 
   private async reconnect(why: string) {
-    if (this.reconnecting || !this.wantOpen) return;
+    if (!this.wantOpen) return;
+    if (this.reconnecting) {
+      this.reconnectAgain = true;
+      return;
+    }
     this.reconnecting = true;
     try {
       if (!navigator.onLine) return this.set("offline", "Jste offline. Jakmile se připojení vrátí, lekce naváže.");
@@ -131,15 +169,41 @@ export class LiveConnection {
       await this.establish(this.handle, false);
     } finally {
       this.reconnecting = false;
+      if (this.reconnectAgain && this.wantOpen && !this.isOpen) {
+        this.reconnectAgain = false;
+        void this.reconnect("again");
+      } else this.reconnectAgain = false;
     }
   }
 
   sendControl(t: string) {
-    if (this.isOpen) this.session!.sendControl(t);
-    else this.queue.push(t); // delivered after the connection is back (dropped if the model context had to be rebuilt)
+    if (this.isOpen) {
+      this.session!.sendControl(t);
+      if (!this.awaitingSince) this.awaitingSince = Date.now();
+    } else this.queue.push(t); // delivered after the connection is back (dropped if the model context had to be rebuilt)
   }
   sendAudio(b64: string) {
     if (this.isOpen) this.session!.sendAudio(b64);
+  }
+  /** Manual "try again" after the automatic attempts gave up (or the very first connection failed). */
+  async retry() {
+    if (!this.wantOpen) return;
+    this.retries = 0;
+    this.reconnectAgain = false;
+    await this.reconnect("manual");
+  }
+
+  /** Push-to-talk. Returns false when the connection is not usable (the UI then tells the child to wait). */
+  activityStart(): boolean {
+    if (!this.isOpen) return false;
+    this.session!.sendActivityStart();
+    return true;
+  }
+  activityEnd(): boolean {
+    if (!this.isOpen) return false;
+    this.session!.sendActivityEnd();
+    if (!this.awaitingSince) this.awaitingSince = Date.now();
+    return true;
   }
   sendToolResponse(id: string | undefined, name: string, response: Record<string, unknown>) {
     if (this.isOpen) this.session!.sendToolResponse(id, name, response);
@@ -148,6 +212,7 @@ export class LiveConnection {
   close() {
     this.wantOpen = false;
     clearTimeout(this.goAwayTimer);
+    clearInterval(this.watchdog);
     window.removeEventListener("online", this.onlineHandler);
     this.session?.close();
     this.session = null;

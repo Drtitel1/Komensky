@@ -12,23 +12,27 @@ Komenský je učitel matematiky, který si s tebou povídá. Mluví, ptá se tě
 4. Instalace trvá chvilku, potom se aplikace sama otevře. Na ploše najdeš ikonku **Komenský** (fialové K).
 5. Když se Windows zeptá na **mikrofon**, klikni na **Ano / Povolit**. Bez mikrofonu se učitel neslyší.
 
-> 💡 Nejlepší je mít **sluchátka**. Učitel pak neslyší sám sebe z reproduktorů a lépe ti rozumí.
+> 💡 Sluchátka nejsou nutná: učitel tě slyší jen když držíš tlačítko, takže ho nepletou zvuky v pokoji.
 
 ## 2. Jak probíhá lekce
 
 1. Na úvodní obrazovce klikni na **▶ Začít lekci**. (Poprvé chvilku trvá, než se lekce připraví.)
-2. Klikni na velké **▶** uprostřed. Učitel tě přivítá a začne vykládat.
-3. Když se tě zeptá, **odpověz nahlas**. Nemusíš nic psát ani klikat.
-4. Můžeš ho kdykoli **přerušit** a zeptat se. Potom pokračuje tam, kde skončil.
-5. Velké **⏸** tlačítko dělá **pauzu**. Klepnutím znovu pokračuješ.
+2. Klikni na velké **▶ Klepni a začneme**. Učitel tě přivítá a začne vykládat.
+3. **Mluvíš tak, že PODRŽÍŠ velké fialové tlačítko 🎤** (nebo **mezerník** na klávesnici). Dokud ho držíš, učitel tě poslouchá. **Až domluvíš, pusť ho.** Učitel ti pak odpoví.
+   - Tlačítko je **červené 🎙️ „Poslouchám…“**, když ho držíš.
+   - **Modré 🗣️ „Učitel mluví“** – když učitel mluví. Když ho chceš přerušit, **podrž tlačítko** a řekni, co potřebuješ.
+   - **Žluté 💭 „Přemýšlím…“** – učitel právě vymýšlí odpověď.
+   - **Fialové 🎤 „Drž a mluv“** – můžeš mluvit.
+4. Když se tě učitel zeptá, **podrž tlačítko a odpověz nahlas**. Nemusíš nic psát.
+5. **⏸ Pauza** zastaví lekci i čas. **▶ Pokračovat** ji znovu spustí.
 6. Vpravo dole vidíš, co učitel říká a co říkáš ty (přepis).
 7. Na konci je kvíz. Když budeš mít aspoň **75 %**, lekce je splněná a odemkne se další. Když ne, nevadí – učitel ti to ještě jednou jinak vysvětlí a zkusíte to znovu.
 8. Můžeš kdykoli kliknout **Skončit a uložit**. Příště začneš přesně tam, kde jsi přestala.
 
 ## 3. Když něco nefunguje
 
-- **Učitel mě neslyší:** zkontroluj, že je mikrofon zapojený a že v okně Windows *Nastavení → Soukromí → Mikrofon* je povolený pro aplikace.
-- **Nepřipojuje se:** zkontroluj internet. Aplikace to zkouší znovu sama a lekce naváže.
+- **Učitel mě neslyší:** držíš tlačítko po celou dobu, co mluvíš? Zkontroluj, že je mikrofon zapojený a že v okně Windows *Nastavení → Soukromí a zabezpečení → Mikrofon* je povolený pro aplikace. Aplikace ti napíše červeně, když mikrofon nefunguje – klepni na **Zkusit znovu**.
+- **Nepřipojuje se:** zkontroluj internet. Aplikace to zkouší znovu sama a lekce naváže tam, kde byla (čas ani postup se neztratí). Když to nepomůže, klepni na **Zkusit připojit znovu**.
 - **Cokoli jiného:** řekni bráškovi/ségře.
 
 ## 4. Aktualizace

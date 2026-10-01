@@ -33,6 +33,8 @@ Data leží v `%APPDATA%\komensky\` (soubor `komensky.db`, logy v `logs\main.log
 
 ## 4. Vydání nové verze (ty na svém počítači)
 
+> Stručný postup je v [RELEASING.md](../RELEASING.md).
+
 Potřebuješ Node.js 22+ a `git` s přístupem k repozitáři.
 
 ```bash

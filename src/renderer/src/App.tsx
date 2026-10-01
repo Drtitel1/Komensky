@@ -20,6 +20,10 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   const [modal, setModal] = useState<"settings" | "admin" | null>(null);
   const update = useUpdateStatus();
+  const [version, setVersion] = useState("");
+  useEffect(() => {
+    void api.app.info().then((i) => setVersion(i.version));
+  }, [api]);
 
   const refresh = useCallback(async () => {
     setOv(await api.progress.overview());
@@ -65,7 +69,9 @@ export default function App() {
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between px-6 py-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-brand">Komenský</h1>
+          <h1 className="text-2xl font-extrabold text-brand">
+            Komenský <span className="ml-1 align-middle text-sm font-semibold text-ink/40" data-testid="version">{version && `verze ${version}`}</span>
+          </h1>
           <p className="text-sm text-ink/60">{ov?.subject ?? "Matematika pro 3. třídu"}</p>
         </div>
         {phase !== "setup" && phase !== "boot" && (

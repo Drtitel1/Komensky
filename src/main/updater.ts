@@ -13,17 +13,23 @@ export class Updater extends EventEmitter {
   private lessonActive = false;
   private blocker: number | null = null;
   private timer?: NodeJS.Timeout;
+  private pendingDownload = false;
 
   constructor() {
     super();
     this.status = app.isPackaged ? { state: "idle", version: app.getVersion() } : { state: "dev", version: app.getVersion() };
     if (!app.isPackaged) return;
     autoUpdater.logger = log;
-    autoUpdater.autoDownload = true;
+    // the download is started by us, and never while a lesson is running (it must not compete with the live audio)
+    autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true; // "Později" = installed when the app is closed
     autoUpdater.allowDowngrade = false;
     autoUpdater.on("checking-for-update", () => this.set({ state: "checking", version: app.getVersion() }));
-    autoUpdater.on("update-available", (i) => this.set({ state: "downloading", version: app.getVersion(), percent: 0, next: i.version }));
+    autoUpdater.on("update-available", (i) => {
+      this.set({ state: "downloading", version: app.getVersion(), percent: 0, next: i.version });
+      this.pendingDownload = true;
+      this.maybeDownload();
+    });
     autoUpdater.on("update-not-available", () => this.set({ state: "none", version: app.getVersion() }));
     autoUpdater.on("download-progress", (p) => this.set({ state: "downloading", version: app.getVersion(), percent: Math.round(p.percent), next: (this.status as { next?: string }).next }));
     autoUpdater.on("update-downloaded", (i) => this.set({ state: "ready", version: app.getVersion(), next: i.version }));
@@ -59,8 +65,16 @@ export class Updater extends EventEmitter {
     return this.status;
   }
 
+  /** Starts the background download unless a lesson is running; called again when the lesson ends. */
+  private maybeDownload() {
+    if (!this.pendingDownload || this.lessonActive) return;
+    this.pendingDownload = false;
+    autoUpdater.downloadUpdate().catch((e: Error) => this.set({ state: "error", version: app.getVersion(), message: e.message?.slice(0, 200) ?? "stahování selhalo" }));
+  }
+
   setLessonActive(active: boolean) {
     this.lessonActive = active;
+    if (!active) setTimeout(() => this.maybeDownload(), 2000);
     if (active && this.blocker === null) this.blocker = powerSaveBlocker.start("prevent-display-sleep");
     if (!active && this.blocker !== null) {
       powerSaveBlocker.stop(this.blocker);

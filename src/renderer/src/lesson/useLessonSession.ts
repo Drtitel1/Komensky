@@ -10,7 +10,19 @@ export interface UiMsg {
   text: string;
 }
 
-const VOICE_RMS = 0.03; // local voice-activity threshold (only used while the teacher is silent)
+const MAX_HOLD_MS = 60_000; // a forgotten button must not stream audio forever
+const MIN_ANSWER_MS = 400; // shorter presses count as accidental taps
+const THINK_TIMEOUT_MS = 12_000;
+
+/** Czech, human-readable reason why the microphone cannot be used. */
+export function micErrorMessage(e: unknown): string {
+  const name = (e as { name?: string })?.name ?? "";
+  if (name === "NotAllowedError" || name === "SecurityError")
+    return "Aplikace nemá povolený mikrofon. Otevři Nastavení Windows → Soukromí a zabezpečení → Mikrofon a zapni „Povolit desktopovým aplikacím přístup k mikrofonu“.";
+  if (name === "NotFoundError" || name === "OverconstrainedError") return "Nenašla jsem žádný mikrofon. Zapoj mikrofon (nebo sluchátka s mikrofonem) a zkus to znovu.";
+  if (name === "NotReadableError" || name === "AbortError") return "Mikrofon právě používá jiná aplikace (např. Teams, Zoom). Zavři ji a zkus to znovu.";
+  return `Mikrofon se nepodařilo zapnout (${(e as Error)?.message ?? "neznámá chyba"}).`;
+}
 
 export function useLessonSession(data: OpenLesson, onFinished: () => void) {
   const api = window.komensky;
@@ -19,7 +31,10 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
   const [conn, setConn] = useState<ConnState>("idle");
   const [connMsg, setConnMsg] = useState<string>("");
   const [speaking, setSpeaking] = useState(false);
-  const [talking, setTalking] = useState(false);
+  const [held, setHeld] = useState(false);
+  const [thinking, setThinking] = useState(false);
+  const [micProblem, setMicProblem] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
@@ -33,15 +48,21 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
   const open = useRef<{ user: number | null; model: number | null }>({ user: null, model: null });
   const usage = useRef({ turns: 0, prompt: 0, response: 0, promptAudio: 0, responseAudio: 0 });
   const texts = useRef(new Map<number, string>());
-  const voiceUntil = useRef(0);
-  const voiceRun = useRef(0);
-  const transcriptUntil = useRef(0);
   const finishedRef = useRef(false);
   const startedEngine = useRef(false);
-  const speakingNow = useRef(false);
+  const heldRef = useRef(false);
+  const heldAt = useRef(0);
+  const capTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const thinkTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const noticeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lessonId = data.lesson.id;
 
   const phaseNow = () => engine.current?.state.phase ?? "";
+  const flash = useCallback((text: string) => {
+    setNotice(text);
+    clearTimeout(noticeTimer.current);
+    noticeTimer.current = setTimeout(() => setNotice(null), 3500);
+  }, []);
 
   const closeMsg = useCallback(
     (role: "user" | "model") => {
@@ -75,6 +96,97 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
     [closeMsg],
   );
 
+  /* ---------- push-to-talk ---------- */
+
+  /** The child lets go (or something forces a release). `send` = tell the server the answer is complete. */
+  const release = useCallback((send: boolean) => {
+    if (!heldRef.current) return;
+    heldRef.current = false;
+    clearTimeout(capTimer.current);
+    if (mic.current) mic.current.capturing = false; // stop forwarding audio BEFORE activityEnd
+    setHeld(false);
+    engine.current?.setUserSpeaking(false);
+    if (!send) return;
+    const dur = performance.now() - heldAt.current;
+    connection.current?.activityEnd();
+    if (dur >= MIN_ANSWER_MS) {
+      engine.current?.noteUserTranscript();
+      setThinking(true);
+      clearTimeout(thinkTimer.current);
+      thinkTimer.current = setTimeout(() => setThinking(false), THINK_TIMEOUT_MS);
+    }
+  }, []);
+
+  const pttDown = useCallback(() => {
+    const e = engine.current;
+    if (heldRef.current || !e || finishedRef.current) return;
+    if (e.paused) return flash("Lekce je pozastavená. Klepni na „Pokračovat“.");
+    const c = connection.current;
+    if (!c || !c.isOpen) return flash("Ještě se připojuji k učiteli, chvilku strpení…");
+    if (!mic.current?.alive) {
+      setMicProblem((p) => p ?? "Mikrofon není připojený. Zapoj ho a klepni na „Zkusit znovu“.");
+      return;
+    }
+    // barge-in: the tutor stops immediately on this side; activityStart makes the server stop generating too
+    play.current?.flush();
+    e.setModelSpeaking(false);
+    if (!c.activityStart()) return flash("Spojení se právě přerušilo, zkus to za chvilku.");
+    heldRef.current = true;
+    heldAt.current = performance.now();
+    mic.current.capturing = true;
+    setHeld(true);
+    setThinking(false);
+    setNotice(null);
+    e.setUserSpeaking(true);
+    clearTimeout(capTimer.current);
+    capTimer.current = setTimeout(() => release(true), MAX_HOLD_MS);
+  }, [flash, release]);
+
+  const pttUp = useCallback(() => release(true), [release]);
+  const retryConnection = useCallback(() => void connection.current?.retry(), []);
+
+  // Space = hold to talk (not while typing in a field or while a dialog is open); losing focus lets go
+  useEffect(() => {
+    if (!started) return;
+    const typing = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+    };
+    const dialogOpen = () => !!document.querySelector("[data-modal]");
+    const down = (ev: KeyboardEvent) => {
+      if (ev.code !== "Space" || typing(ev.target) || dialogOpen()) return;
+      ev.preventDefault();
+      if (!ev.repeat) pttDown();
+    };
+    const up = (ev: KeyboardEvent) => {
+      if (ev.code !== "Space" || typing(ev.target)) return;
+      ev.preventDefault();
+      pttUp();
+    };
+    const lost = () => release(true);
+    const hidden = () => document.visibilityState === "hidden" && release(true);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", lost);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", lost);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  }, [started, pttDown, pttUp, release]);
+
+  // a dropped connection ends an answer in progress (nothing more can be sent)
+  useEffect(() => {
+    if (conn !== "open" && heldRef.current) {
+      release(false);
+      flash("Spojení se přerušilo. Až se obnoví, zkus to ještě jednou.");
+    }
+  }, [conn, release, flash]);
+
+  /* ---------- lifecycle ---------- */
+
   const teardown = useCallback(() => {
     const u = usage.current;
     if (u.turns) {
@@ -83,6 +195,9 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
       api.log("info", `lesson ${lessonId} usage: ${u.turns} reports, prompt ${u.prompt} (audio ${u.promptAudio}), response ${u.response} (audio ${u.responseAudio}) tokens, ~$${cost.toFixed(2)}`);
       usage.current = { turns: 0, prompt: 0, response: 0, promptAudio: 0, responseAudio: 0 };
     }
+    heldRef.current = false;
+    clearTimeout(capTimer.current);
+    clearTimeout(thinkTimer.current);
     timers.current.forEach(clearInterval);
     timers.current = [];
     mic.current?.stop();
@@ -93,6 +208,30 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
     play.current = null;
     void api.lesson.setActive(false);
   }, [api, lessonId]);
+
+  const openMic = useCallback(async () => {
+    mic.current?.stop();
+    const m = new MicCapture();
+    await m.start({
+      onChunk: (b64) => connection.current?.sendAudio(b64),
+      onLevel: () => undefined,
+      onEnded: () => {
+        release(false);
+        setMicProblem("Mikrofon byl odpojen. Zapoj ho a klepni na „Zkusit znovu“.");
+      },
+    });
+    mic.current = m;
+  }, [release]);
+
+  /** After the microphone was unplugged / blocked: try to get it again. */
+  const retryMic = useCallback(async () => {
+    try {
+      await openMic();
+      setMicProblem(null);
+    } catch (e) {
+      setMicProblem(micErrorMessage(e));
+    }
+  }, [openMic]);
 
   const start = useCallback(async () => {
     if (started) return;
@@ -142,14 +281,19 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
             } else engine.current?.resync();
           },
           onResumed: () => undefined,
-          onAudio: (b64) => play.current?.push(b64),
+          onAudio: (b64) => {
+            setThinking(false);
+            if (!heldRef.current) play.current?.push(b64); // while she holds the button the tutor stays quiet
+          },
           onInputTranscript: (t) => {
-            transcriptUntil.current = performance.now() + 1500;
             engine.current?.noteUserTranscript();
             addText("user", t);
           },
           onOutputTranscript: (t) => addText("model", t),
-          onTurnComplete: () => closeMsg("model"),
+          onTurnComplete: () => {
+            setThinking(false);
+            closeMsg("model");
+          },
           onInterrupted: () => {
             play.current?.flush();
             closeMsg("model");
@@ -168,20 +312,12 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
       );
       connection.current = c;
 
-      const m = new MicCapture();
-      mic.current = m;
-      await m.start({
-        onChunk: (b64) => connection.current?.sendAudio(b64),
-        onLevel: (rms) => {
-          if (rms > VOICE_RMS && !speakingNow.current) voiceUntil.current = performance.now() + 900;
-        },
-      });
-
+      await openMic(); // asks for permission; errors are reported below in Czech
       await api.lesson.setActive(true);
       setStarted(true);
       await c.open();
 
-      // one-second lesson clock + fast poll for "who is talking"
+      // lesson clock + fast poll for "is the tutor talking"
       let last = performance.now();
       // automated tests may speed the clock up (window.__KOMENSKY_TIME_SCALE); it is always 1 for real users
       const scale = (window as unknown as { __KOMENSKY_TIME_SCALE?: number }).__KOMENSKY_TIME_SCALE ?? 1;
@@ -195,47 +331,34 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
         setInterval(() => {
           const p = play.current;
           if (!p) return;
-          const now = performance.now();
-          const model = p.playing || now - p.lastChunkAt < 900;
-          const raw = now < voiceUntil.current;
-          voiceRun.current = raw ? voiceRun.current + 100 : 0;
-          // constant background noise is not "the child is speaking"
-          const user = (raw && voiceRun.current < 8000) || now < transcriptUntil.current;
-          speakingNow.current = model;
+          const model = p.playing || performance.now() - p.lastChunkAt < 900;
           setSpeaking(model);
-          setTalking(user && !model);
           engine.current?.setModelSpeaking(model);
-          engine.current?.setUserSpeaking(user);
         }, 100),
       );
     } catch (e) {
-      const err = e as Error & { name?: string };
       teardown();
       setStarted(false);
       startedEngine.current = false;
-      setError(
-        err.name === "NotAllowedError" || err.name === "NotFoundError"
-          ? "Mikrofon není dostupný. Zkontrolujte, že je zapojený a že aplikace smí mikrofon používat (Nastavení Windows → Soukromí → Mikrofon)."
-          : `Lekci se nepodařilo spustit: ${err.message}`,
-      );
+      const name = (e as { name?: string }).name ?? "";
+      setError(["NotAllowedError", "NotFoundError", "NotReadableError", "OverconstrainedError", "SecurityError", "AbortError"].includes(name) ? micErrorMessage(e) : `Lekci se nepodařilo spustit: ${(e as Error).message}`);
     }
-  }, [addText, api, closeMsg, data, lessonId, onFinished, started, teardown]);
+  }, [addText, api, closeMsg, data, lessonId, onFinished, openMic, started, teardown]);
 
   const togglePause = useCallback(async () => {
     const e = engine.current;
     if (!e || finishedRef.current) return;
     if (e.paused) {
       await play.current?.resume();
-      if (mic.current) mic.current.muted = false;
       e.resume();
     } else {
+      release(true);
       e.pause();
-      if (mic.current) mic.current.muted = true;
       play.current?.flush();
       await play.current?.suspend();
     }
     setView(e.view());
-  }, []);
+  }, [release]);
 
   /** Leave the lesson; progress is already saved and the next start resumes at the same part and state. */
   const leave = useCallback(() => {
@@ -250,6 +373,9 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
     window.addEventListener("beforeunload", save);
     return () => {
       window.removeEventListener("beforeunload", save);
+      clearTimeout(capTimer.current);
+      clearTimeout(thinkTimer.current);
+      clearTimeout(noticeTimer.current);
       timers.current.forEach(clearInterval);
       mic.current?.stop();
       connection.current?.close();
@@ -258,5 +384,5 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
     };
   }, [api]);
 
-  return { view, msgs, conn, connMsg, speaking, talking, started, error, finished, start, togglePause, leave };
+  return { view, msgs, conn, connMsg, speaking, held, thinking, micProblem, notice, started, error, finished, start, togglePause, leave, pttDown, pttUp, retryMic, retryConnection };
 }

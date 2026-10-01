@@ -12,7 +12,7 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 
 export function Modal({ title, onClose, children, wide }: { title: string; onClose?: () => void; children: ReactNode; wide?: boolean }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div data-modal className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className={`max-h-[90vh] w-full overflow-y-auto rounded-3xl bg-white p-6 ${wide ? "max-w-3xl" : "max-w-lg"}`} onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-2xl font-extrabold">{title}</h3>

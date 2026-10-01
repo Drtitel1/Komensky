@@ -16,6 +16,8 @@ export interface ToolCall {
 }
 
 export interface LiveEvents {
+  /** any message arrived from the server (used by the connection watchdog) */
+  onMessage(): void;
   onSetup(): void;
   onAudio(b64: string): void;
   onInputTranscript(text: string): void;
@@ -35,6 +37,8 @@ export interface LiveLike {
   readonly isClosed: boolean;
   sendControl(text: string): void;
   sendAudio(b64: string): void;
+  sendActivityStart(): void;
+  sendActivityEnd(): void;
   sendToolResponse(id: string | undefined, name: string, response: Record<string, unknown>): void;
   close(): void;
 }
@@ -101,6 +105,16 @@ export class LiveSession implements LiveLike {
     if (this.closed) return;
     this.session.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } });
   }
+  /** Push-to-talk: the child pressed the button. Only valid because automatic activity detection is disabled in the setup. */
+  sendActivityStart() {
+    if (this.closed) return;
+    this.session.sendRealtimeInput({ activityStart: {} });
+  }
+  /** Push-to-talk: the child released the button – the model may now answer. */
+  sendActivityEnd() {
+    if (this.closed) return;
+    this.session.sendRealtimeInput({ activityEnd: {} });
+  }
   sendToolResponse(id: string | undefined, name: string, response: Record<string, unknown>) {
     if (this.closed) return;
     // SILENT: acknowledge without making the model speak
@@ -120,6 +134,7 @@ export class LiveSession implements LiveLike {
 }
 
 function handle_(m: LiveServerMessage, ev: LiveEvents) {
+  ev.onMessage();
   if (m.setupComplete) ev.onSetup();
   const c = m.serverContent;
   if (c) {
@@ -152,7 +167,7 @@ function handle_(m: LiveServerMessage, ev: LiveEvents) {
 export async function connectLive(info: LiveTokenInfo, handle: string | undefined, ev: LiveEvents): Promise<LiveLike> {
   if (info.token === "test-token") {
     const { FakeLiveSession } = await import("./fakeSession");
-    return FakeLiveSession.connect(ev);
+    return FakeLiveSession.connect(ev, handle);
   }
   return LiveSession.connect(info, handle, ev);
 }
