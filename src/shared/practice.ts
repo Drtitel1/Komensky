@@ -28,11 +28,15 @@ export function makeQuestions(opts: PracticeOptions, rng: () => number = Math.ra
   const tables = [...new Set(opts.tables.filter((t) => Number.isInteger(t) && t >= 1 && t <= 10))];
   if (!tables.length) return [];
   const pool: PracticeQ[] = [];
+  const seen = new Set<string>();
   for (const t of tables) {
     for (let b = 1; b <= 10; b++) {
       const flip = rng() < 0.5;
       const [x, y] = flip ? [b, t] : [t, b];
       const hide = opts.missing && rng() < 0.3 ? (rng() < 0.5 ? "a" : "b") : "product";
+      const key = `${x}x${y}`;
+      if (seen.has(key)) continue; // 2 × 3 from the 2-table and from the 3-table is one question
+      seen.add(key);
       pool.push({ a: x, b: y, hide });
     }
   }
