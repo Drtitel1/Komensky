@@ -81,7 +81,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           v="v$(node -p "require('./package.json').version")"
-          n="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq "[.[] | select(.tag_name==\"$v\")] | length" | paste -sd+ - | bc)"
+          n="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq ".[] | select(.tag_name==\"$v\") | .id" | grep -c . || true)"
           names="$(gh release view "$v" --json assets --jq '.assets[].name')"
           echo "releases for $v: $n"; echo "$names"
           [ "$n" = "1" ] || { echo "expected exactly one release for $v"; exit 1; }
