@@ -2,6 +2,8 @@ import Database from "better-sqlite3";
 import { copyFileSync, existsSync, statSync } from "node:fs";
 import type { AnswerRec, LessonState, Plan } from "@shared/types";
 import { nextSrs, type SrsRow } from "@shared/srs";
+import { allLessons } from "@shared/course";
+import type { Curriculum } from "@shared/types";
 import log from "./log";
 
 /* Schema migrations. Only ever APPEND to this list: an update must never drop or rewrite her progress.
@@ -31,6 +33,14 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX transcripts_lesson ON transcripts (lesson_id);
   `,
+  // v2: courses live in the database (editable / generated); lessons can be skipped by the administrator
+  `
+  CREATE TABLE courses (
+    id TEXT PRIMARY KEY, title TEXT NOT NULL, json TEXT NOT NULL, builtin INTEGER NOT NULL DEFAULT 0,
+    edited INTEGER NOT NULL DEFAULT 0, content_version INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  );
+  ALTER TABLE lesson_progress ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0;
+  `,
 ];
 
 export function migrate(db: Database.Database, file?: string) {
@@ -56,6 +66,7 @@ export interface ProgressRow {
   status: "in_progress" | "completed";
   state_json: string | null;
   score: number | null;
+  skipped: number;
   started_at: string;
   completed_at: string | null;
 }
@@ -127,14 +138,14 @@ export class Store {
       )
       .run({ id: state.lessonId, json: JSON.stringify(state), t });
   }
-  completeLesson(lessonId: string, score: number | null) {
+  completeLesson(lessonId: string, score: number | null, skipped = false) {
     const t = now();
     this.db
       .prepare(
-        `INSERT INTO lesson_progress (lesson_id, status, score, started_at, completed_at, updated_at) VALUES (@id, 'completed', @score, @t, @t, @t)
-         ON CONFLICT(lesson_id) DO UPDATE SET status = 'completed', score = excluded.score, completed_at = excluded.completed_at, updated_at = excluded.updated_at`,
+        `INSERT INTO lesson_progress (lesson_id, status, score, skipped, started_at, completed_at, updated_at) VALUES (@id, 'completed', @score, @skipped, @t, @t, @t)
+         ON CONFLICT(lesson_id) DO UPDATE SET status = 'completed', score = excluded.score, skipped = excluded.skipped, completed_at = excluded.completed_at, updated_at = excluded.updated_at`,
       )
-      .run({ id: lessonId, score, t });
+      .run({ id: lessonId, score, skipped: skipped ? 1 : 0, t });
   }
   resetLesson(lessonId: string) {
     this.db.transaction(() => {
@@ -192,6 +203,63 @@ export class Store {
       .all(limit) as { question_id: string; lesson_id: string; wrong: number; total: number }[];
   }
 
+  /* ----- courses ----- */
+  listCourses(): { id: string; title: string; subject: string; builtin: boolean; edited: boolean; lessons: number; updatedAt: string; generated: boolean }[] {
+    const rows = this.db.prepare("SELECT id, title, json, builtin, edited, updated_at FROM courses ORDER BY builtin DESC, created_at").all() as { id: string; title: string; json: string; builtin: number; edited: number; updated_at: string }[];
+    return rows.map((r) => {
+      const c = JSON.parse(r.json) as Curriculum;
+      return { id: r.id, title: r.title, subject: c.subject, builtin: !!r.builtin, edited: !!r.edited, lessons: allLessons(c).length, updatedAt: r.updated_at, generated: !!c.generated };
+    });
+  }
+  getCourse(id: string): Curriculum | null {
+    const r = this.db.prepare("SELECT json FROM courses WHERE id = ?").get(id) as { json: string } | undefined;
+    return r ? (JSON.parse(r.json) as Curriculum) : null;
+  }
+  courseRow(id: string) {
+    return this.db.prepare("SELECT id, builtin, edited, content_version AS contentVersion FROM courses WHERE id = ?").get(id) as { id: string; builtin: number; edited: number; contentVersion: number | null } | undefined;
+  }
+  saveCourse(c: Curriculum, o: { builtin?: boolean; edited?: boolean; contentVersion?: number } = {}) {
+    const t = now();
+    this.db
+      .prepare(
+        `INSERT INTO courses (id, title, json, builtin, edited, content_version, created_at, updated_at) VALUES (@id, @title, @json, @builtin, @edited, @cv, @t, @t)
+         ON CONFLICT(id) DO UPDATE SET title = excluded.title, json = excluded.json, edited = excluded.edited, content_version = COALESCE(excluded.content_version, courses.content_version), updated_at = excluded.updated_at`,
+      )
+      .run({ id: c.id, title: c.subject, json: JSON.stringify(c), builtin: o.builtin ? 1 : 0, edited: o.edited ? 1 : 0, cv: o.contentVersion ?? null, t });
+  }
+  /** Which course (if any) owns this lesson id. Lesson ids are unique across courses. */
+  courseOfLesson(lessonId: string): string | null {
+    for (const r of this.db.prepare("SELECT id, json FROM courses").all() as { id: string; json: string }[]) {
+      if (allLessons(JSON.parse(r.json) as Curriculum).some((l) => l.id === lessonId)) return r.id;
+    }
+    return null;
+  }
+  /** Removes a course AND everything recorded for its lessons (plans, progress, answers, repetition queue, transcripts). */
+  deleteCourse(id: string) {
+    const c = this.getCourse(id);
+    if (!c) return;
+    const ids = allLessons(c).map((l) => l.id);
+    this.db.transaction(() => {
+      for (const l of ids) {
+        for (const t of ["lesson_plans", "lesson_progress", "answers", "srs", "transcripts"]) this.db.prepare(`DELETE FROM ${t} WHERE lesson_id = ?`).run(l);
+      }
+      this.db.prepare("DELETE FROM courses WHERE id = ?").run(id);
+      if (this.kvGet("active_course") === id) this.db.prepare("DELETE FROM kv WHERE key = 'active_course'").run();
+    })();
+  }
+  activeCourseId(): string | null {
+    return this.kvGet("active_course");
+  }
+  setActiveCourse(id: string) {
+    this.kvSet("active_course", id);
+  }
+  /** Installs the bundled course on first run; a newer bundled version replaces it only if the user never edited it. */
+  seedBuiltin(bundled: Curriculum, contentVersion: number): void {
+    const row = this.courseRow(bundled.id);
+    if (!row) return this.saveCourse(bundled, { builtin: true, edited: false, contentVersion });
+    if (row.builtin && !row.edited && (row.contentVersion ?? 0) < contentVersion) this.saveCourse(bundled, { builtin: true, edited: false, contentVersion });
+  }
+
   /* ----- backup ----- */
   exportAll() {
     const rows = (t: string) => this.db.prepare(`SELECT * FROM ${t}`).all();
@@ -206,17 +274,18 @@ export class Store {
       answers: rows("answers"),
       srs: rows("srs"),
       transcripts: rows("transcripts"),
+      courses: rows("courses"),
     };
   }
   importAll(data: ReturnType<Store["exportAll"]>) {
     if (data.app !== "komensky" || data.format !== 1) throw new Error("Neplatný soubor zálohy.");
     if (data.schema > MIGRATIONS.length) throw new Error("Záloha je z novější verze aplikace. Nejdřív aplikaci aktualizujte.");
-    const tables = ["kv", "lesson_plans", "lesson_progress", "answers", "srs", "transcripts"] as const;
+    const tables = ["kv", "lesson_plans", "lesson_progress", "answers", "srs", "transcripts", "courses"] as const;
     this.db.transaction(() => {
       for (const t of tables) this.db.prepare(`DELETE FROM ${t}`).run();
       for (const t of tables) {
         const valid = new Set((this.db.prepare(`PRAGMA table_info(${t})`).all() as { name: string }[]).map((c) => c.name));
-        for (const row of (data[t] ?? []) as Record<string, unknown>[]) {
+        for (const row of ((data as Record<string, unknown>)[t] ?? []) as Record<string, unknown>[]) {
           const cols = Object.keys(row);
           if (!cols.length || cols.some((c) => !valid.has(c))) throw new Error("Záloha obsahuje neznámé sloupce.");
           this.db.prepare(`INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map((c) => "@" + c).join(",")})`).run(row);

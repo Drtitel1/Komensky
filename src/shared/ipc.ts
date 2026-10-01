@@ -3,11 +3,12 @@ import type { AnswerRec, AppSettings, Curriculum, LessonDef, LessonState, Plan, 
 export type LessonStatus = "locked" | "current" | "completed";
 export interface Overview {
   subject: string;
+  courseId: string;
   currentLessonId: string | null;
   completed: number;
   total: number;
   srsDue: number;
-  stages: { id: number; title: string; lessons: { id: string; title: string; status: LessonStatus; inProgress: boolean; score: number | null }[] }[];
+  stages: { id: number; title: string; lessons: { id: string; title: string; status: LessonStatus; inProgress: boolean; score: number | null; skipped: boolean }[] }[];
 }
 
 export interface OpenLesson {
@@ -49,6 +50,28 @@ export interface AdminOverview {
   srsCount: number;
 }
 
+export interface CourseInfo {
+  id: string;
+  title: string;
+  subject: string;
+  builtin: boolean;
+  edited: boolean;
+  lessons: number;
+  updatedAt: string;
+  generated: boolean;
+  active: boolean;
+}
+
+export interface CourseGenParams {
+  subject: string;
+  level: string;
+  age: number;
+  notes: string;
+  material: string;
+  stages: number;
+  lessonsPerStage: number;
+}
+
 export interface KomenskyApi {
   app: { info(): Promise<{ version: string; packaged: boolean; dataDir: string; platform: string }> };
   setup: {
@@ -63,6 +86,8 @@ export interface KomenskyApi {
     onProgress(cb: (p: PlanProgress) => void): () => void;
   };
   lesson: {
+    /** the administrator skips the current lesson (needs the admin PIN every time) */
+    skip(lessonId: string, pin: string): Promise<{ ok: boolean; error?: string }>;
     open(lessonId: string): Promise<{ ok: true; data: OpenLesson } | { ok: false; error: string }>;
     prefetchNext(lessonId: string): Promise<void>;
     saveState(state: LessonState): Promise<void>;
@@ -92,8 +117,24 @@ export interface KomenskyApi {
     getSettings(): Promise<AppSettings>;
     setSettings(s: AppSettings): Promise<void>;
     changePin(oldPin: string, newPin: string): Promise<{ ok: boolean; error?: string }>;
+    skipLesson(lessonId: string): Promise<{ ok: boolean; error?: string }>;
     exportBackup(): Promise<{ ok: boolean; path?: string; error?: string }>;
     importBackup(): Promise<{ ok: boolean; error?: string }>;
+  };
+  courses: {
+    list(): Promise<CourseInfo[]>;
+    get(id: string): Promise<Curriculum | null>;
+    /** validates and stores a course (new id = new course). `stale` = lessons whose stored plan no longer matches the edited content */
+    save(course: Curriculum, isNew?: boolean): Promise<{ ok: boolean; errors?: string[]; course?: Curriculum; stale?: string[] }>;
+    remove(id: string): Promise<{ ok: boolean; error?: string }>;
+    restoreBuiltin(): Promise<{ ok: boolean; error?: string }>;
+    setActive(id: string): Promise<{ ok: boolean; error?: string }>;
+    generate(p: CourseGenParams): Promise<{ ok: true; course: Curriculum } | { ok: false; error: string }>;
+    onProgress(cb: (p: { step: string; done: number; total: number }) => void): () => void;
+    exportCourse(id: string): Promise<{ ok: boolean; path?: string; error?: string }>;
+    importCourse(): Promise<{ ok: boolean; course?: Curriculum; errors?: string[]; error?: string }>;
+    readMaterialFile(): Promise<{ ok: boolean; name?: string; text?: string; error?: string }>;
+    dropPlans(ids: string[]): Promise<void>;
   };
   log(level: "info" | "warn" | "error", message: string): void;
 }

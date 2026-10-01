@@ -11,11 +11,13 @@ import { getApiKey, hasApiKey, saveApiKey } from "./secrets";
 import { getSettings, saveSettings } from "./settings";
 import { checkPin, hasPin, setPin } from "./pin";
 import { assertTrusted } from "./security";
+import { loadActiveCourse, registerCourseIpc } from "./coursesIpc";
+import type { Curriculum } from "@shared/types";
 import log from "./log";
 
 const TEST = !app.isPackaged && process.env["KOMENSKY_TEST"] === "1";
 
-export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Updater; win: () => BrowserWindow | null }) {
+export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Updater; win: () => BrowserWindow | null; bundled: Curriculum; bundledVersion: number }) {
   const { store, svc, updater } = ctx;
   let adminUntil = 0;
   let failed = 0;
@@ -24,6 +26,20 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
   const needAdmin = () => {
     if (!admin()) throw new Error("Nejdříve zadejte PIN.");
     adminUntil = Date.now() + 15 * 60_000;
+  };
+
+  /** Checks the admin PIN with the same attempt limit everywhere (unlock dialog, skip-lesson button). */
+  const tryPin = (pin: string): { ok: boolean; error?: string } => {
+    if (Date.now() < lockedUntil) return { ok: false, error: `Příliš mnoho pokusů, zkuste to za ${Math.ceil((lockedUntil - Date.now()) / 1000)} s.` };
+    if (checkPin(store, String(pin))) {
+      failed = 0;
+      return { ok: true };
+    }
+    if (++failed >= 5) {
+      failed = 0;
+      lockedUntil = Date.now() + 30_000;
+    }
+    return { ok: false, error: "Nesprávný kód správce." };
   };
 
   const on = <K extends string>(channel: K, fn: (e: IpcMainInvokeEvent, ...args: any[]) => unknown) =>
@@ -84,6 +100,11 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
   });
   on("lesson:transcript", (_e, lessonId: string, role: "user" | "model", text: string, phase: string) => store.addTranscript(String(lessonId), role, String(text).slice(0, 8000), String(phase)));
   on("lesson:complete", (_e, lessonId: string, score: number, weak: string[]) => svc.complete(String(lessonId), Number(score), weak));
+  on("lesson:skip", (_e, lessonId: string, pin: string) => {
+    const r = tryPin(String(pin));
+    if (!r.ok) return r;
+    return svc.skipLesson(String(lessonId));
+  });
   on("lesson:setActive", (_e, active: boolean) => updater.setLessonActive(!!active));
 
   /* ----- live ----- */
@@ -94,7 +115,7 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
       if (!lesson || !plan) return { ok: false, error: "Lekce není připravená." };
       if (svc.currentLessonId() !== a.lessonId) return { ok: false, error: "Tato lekce není odemčená." };
       const settings = getSettings();
-      const config = buildLiveConfig({ subject: svc.curriculum.subject, age: svc.curriculum.age, lesson, plan, settings, stateSummary: a.summary?.slice(0, 1500) });
+      const config = buildLiveConfig({ subject: svc.curriculum.subject, age: svc.curriculum.age, level: svc.curriculum.level, notes: svc.curriculum.notes, lesson, plan, settings, stateSummary: a.summary?.slice(0, 1500) });
       if (TEST) return { ok: true, info: { token: "test-token", model: settings.LIVE_MODEL, config } };
       const key = await getApiKey();
       if (!key) return { ok: false, error: "Chybí Gemini API klíč." };
@@ -114,17 +135,9 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
 
   /* ----- admin ----- */
   on("admin:unlock", (_e, pin: string) => {
-    if (Date.now() < lockedUntil) return { ok: false, error: `Příliš mnoho pokusů, zkuste to za ${Math.ceil((lockedUntil - Date.now()) / 1000)} s.` };
-    if (checkPin(store, String(pin))) {
-      failed = 0;
-      adminUntil = Date.now() + 15 * 60_000;
-      return { ok: true };
-    }
-    if (++failed >= 5) {
-      failed = 0;
-      lockedUntil = Date.now() + 30_000;
-    }
-    return { ok: false, error: "Nesprávný PIN." };
+    const r = tryPin(pin);
+    if (r.ok) adminUntil = Date.now() + 15 * 60_000;
+    return r;
   });
   on("admin:lock", () => {
     adminUntil = 0;
@@ -136,7 +149,7 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
     const lessons = svc.curriculum.stages.flatMap((s) => s.lessons).map((l) => {
       const p = progress.get(l.id);
       const st = stats.get(l.id);
-      return { id: l.id, title: l.title, status: p?.status ?? "not_started", score: p?.score ?? null, hasPlan: svc.planReady(l.id), startedAt: p?.started_at ?? null, completedAt: p?.completed_at ?? null, answers: st?.total ?? 0, wrong: st?.wrong ?? 0 };
+      return { id: l.id, title: l.title, status: p?.status === "completed" && p.skipped ? "skipped" : (p?.status ?? "not_started"), score: p?.score ?? null, hasPlan: svc.planReady(l.id), startedAt: p?.started_at ?? null, completedAt: p?.completed_at ?? null, answers: st?.total ?? 0, wrong: st?.wrong ?? 0 };
     });
     const weak = store.weakQuestions().map((w) => {
       const plan = store.getPlan(w.lesson_id)?.plan;
@@ -170,6 +183,7 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
       return { ok: false, error: (err as Error).message };
     }
   });
+  on("admin:skipLesson", (_e, id: string) => (needAdmin(), svc.skipLesson(String(id))));
   on("admin:resetLesson", (_e, id: string) => (needAdmin(), store.resetLesson(String(id))));
   on("admin:jumpTo", (_e, id: string) => (needAdmin(), svc.jumpTo(String(id))));
   on("admin:setKey", async (_e, key: string) => {
@@ -206,11 +220,14 @@ export function registerIpc(ctx: { store: Store; svc: LessonService; updater: Up
     try {
       const data = JSON.parse(readFileSync(r.filePaths[0], "utf8"));
       store.importAll(data);
+      loadActiveCourse(store, svc, ctx.bundled, ctx.bundledVersion); // the backup may bring other courses / another active one
       return { ok: true };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
     }
   });
+
+  registerCourseIpc({ on, needAdmin, ctx, tryPin });
 }
 
 export type _Api = KomenskyApi;

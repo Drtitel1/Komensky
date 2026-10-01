@@ -142,24 +142,85 @@ console.log("lesson 1.1 completed by the state machine with push-to-talk only");
 await page.getByRole("button", { name: "Zpět na přehled" }).last().click();
 await page.getByText("1 / 18 lekcí").waitFor();
 
+// --- skip a lesson with the admin code (wrong code first)
+await page.getByTestId("skip-link").click();
+await page.getByPlaceholder("Kód správce").fill("0000");
+await page.getByRole("button", { name: "Přeskočit lekci" }).click();
+await page.getByText("Nesprávný kód správce").waitFor();
+await page.getByPlaceholder("Kód správce").fill("2468");
+await page.getByRole("button", { name: "Přeskočit lekci" }).click();
+await page.getByText("2 / 18 lekcí").waitFor();
+await page.getByText("přeskočeno").first().waitFor();
+console.log("skip with admin code OK");
+
 // --- admin
 await page.getByRole("button", { name: /Nastavení/ }).click();
 await page.getByRole("button", { name: /Správce/ }).click();
 await page.locator('input[type="password"]').fill("0000");
 await page.getByRole("button", { name: "Odemknout" }).click();
-await page.getByText("Nesprávný PIN").waitFor();
+await page.getByText("Nesprávný kód správce").waitFor();
 await page.locator('input[type="password"]').fill("2468");
 await page.getByRole("button", { name: "Odemknout" }).click();
 await page.getByText("Slabá místa").waitFor();
 await page.getByRole("button", { name: "Přepisy" }).click();
 await page.getByText("Dlouhý výklad").first().waitFor();
 console.log("admin OK, transcripts saved");
+
+// --- curriculum: generate a new course (fake generator in test mode), save, activate, edit
+await page.getByRole("button", { name: "Učivo" }).click();
+await page.getByText("původní kurz").waitFor();
+await page.getByRole("button", { name: /Vygenerovat kurz/ }).click();
+await page.getByPlaceholder(/např. Angličtina/).fill("Angličtina");
+await page.getByPlaceholder(/4\. třída ZŠ/).fill("4. třída ZŠ");
+await page.getByRole("button", { name: "Vygenerovat", exact: true }).click();
+await page.getByText("Nový kurz (zatím neuložený)").waitFor({ timeout: 20000 });
+await page.getByRole("button", { name: "Uložit kurz" }).click();
+await page.getByText("vygenerovaný AI").waitFor();
+await page.getByRole("button", { name: "Nastavit jako aktivní" }).click();
+await page.getByText("Aktivní kurz: Angličtina").waitFor();
+await page.getByRole("button", { name: "Upravit" }).nth(1).click();
+await page.getByText("Úprava kurzu: Angličtina").waitFor();
+await page.locator('input[placeholder="Název lekce"]').first().fill("Moje první lekce");
+await page.getByRole("button", { name: "Uložit kurz" }).click();
+await page.getByText("byl uložen").waitFor();
+console.log("course generated, saved, activated, edited");
+// invalid edit is rejected with a Czech message
+await page.getByRole("button", { name: "Upravit" }).nth(1).click();
+await page.getByRole("button", { name: "JSON" }).click();
+const bad = await page.locator("textarea").first().inputValue();
+await page.locator("textarea").first().fill(bad.replace(/"age": \d+/, '"age": 2'));
+await page.getByRole("button", { name: "Uložit kurz" }).click();
+await page.getByText("Kurz nejde uložit").waitFor();
+await page.getByRole("button", { name: "Zpět bez uložení" }).click();
+await page.getByLabel("Zavřít").click();
+await page.getByText("0 / 9 lekcí").waitFor();
+
+// skip from inside a lesson (admin code), in the new course
+await page.getByRole("button", { name: /Začít lekci/ }).click();
+await page.getByTestId("skip-lesson").waitFor({ timeout: 20000 });
+await page.getByTestId("skip-lesson").click();
+await page.getByPlaceholder("Kód správce").fill("2468");
+await page.getByRole("button", { name: "Přeskočit lekci", exact: true }).click();
+await page.getByText("1 / 9 lekcí").waitFor({ timeout: 20000 });
+console.log("skip from inside a lesson OK");
+
+// switch back to maths: her maths progress is untouched
+await page.getByRole("button", { name: /Nastavení/ }).click();
+await page.getByRole("button", { name: /Správce/ }).click();
+await page.locator('input[type="password"]').fill("2468");
+await page.getByRole("button", { name: "Odemknout" }).click();
+await page.getByRole("button", { name: "Učivo" }).click();
+await page.getByRole("button", { name: "Nastavit jako aktivní" }).first().click();
+await page.getByText("Aktivní kurz: Matematika").waitFor();
+await page.getByLabel("Zavřít").click();
+await page.getByText("2 / 18 lekcí").waitFor();
+console.log("course switch keeps each course's progress");
 await app.close();
 
 // --- persistence across restart (progress must survive)
 app = await launch();
 page = await app.firstWindow();
-await page.getByText("2 / 18 lekcí").or(page.getByText("1 / 18 lekcí")).waitFor({ timeout: 20000 });
+await page.getByText("2 / 18 lekcí").waitFor({ timeout: 20000 });
 console.log("restart: progress kept");
 await app.close();
 

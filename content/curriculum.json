@@ -1,7 +1,9 @@
 {
   "schema": 1,
+  "id": "matematika-3",
   "subject": "Matematika pro 3. třídu",
   "age": 8,
+  "level": "3. třída základní školy",
   "stages": [
     {
       "id": 1,

@@ -12,15 +12,23 @@ import log from "./log";
 
 export class LessonService extends EventEmitter {
   private running = new Map<string, Promise<Plan>>();
-  private all: (LessonDef & { stageId: number; stageTitle: string })[];
+  private all: (LessonDef & { stageId: number; stageTitle: string })[] = [];
+  /** the ACTIVE course (the one the learner is studying) */
+  curriculum!: Curriculum;
 
   constructor(
     readonly store: Store,
-    readonly curriculum: Curriculum,
+    curriculum: Curriculum,
     private generate: typeof generatePlan = generatePlan,
   ) {
     super();
-    this.all = curriculum.stages.flatMap((s) => s.lessons.map((l) => ({ ...l, stageId: s.id, stageTitle: s.title })));
+    this.setCurriculum(curriculum);
+  }
+
+  /** Switch to another course or pick up edits of the active one. Progress of every course stays in the database. */
+  setCurriculum(c: Curriculum) {
+    this.curriculum = c;
+    this.all = c.stages.flatMap((s) => s.lessons.map((l) => ({ ...l, stageId: s.id, stageTitle: s.title })));
   }
 
   lessonById(id: string) {
@@ -41,8 +49,9 @@ export class LessonService extends EventEmitter {
     const current = this.currentLessonId();
     return {
       subject: this.curriculum.subject,
+      courseId: this.curriculum.id,
       currentLessonId: current,
-      completed: done.size,
+      completed: this.all.filter((l) => done.has(l.id)).length,
       total: this.all.length,
       srsDue: this.store.srsCount(),
       stages: this.curriculum.stages.map((s) => ({
@@ -54,6 +63,7 @@ export class LessonService extends EventEmitter {
           status: done.has(l.id) ? "completed" : l.id === current ? "current" : "locked",
           inProgress: progress.get(l.id)?.status === "in_progress",
           score: progress.get(l.id)?.score ?? null,
+          skipped: !!progress.get(l.id)?.skipped,
         })),
       })),
     };
@@ -152,13 +162,22 @@ export class LessonService extends EventEmitter {
     log.info(`lesson ${lessonId} completed, score ${score.toFixed(2)} (mastery ${MASTERY})`);
   }
 
+  /** Administrator skips a lesson: it counts as done (marked "skipped", no score) and the next one is offered. */
+  skipLesson(lessonId: string): { ok: boolean; error?: string } {
+    if (this.currentLessonId() !== lessonId) return { ok: false, error: "Přeskočit jde jen aktuální lekce." };
+    this.store.completeLesson(lessonId, null, true);
+    log.info(`lesson ${lessonId} skipped by the administrator`);
+    this.prefetchNext(lessonId);
+    return { ok: true };
+  }
+
   jumpTo(lessonId: string) {
     const idx = this.all.findIndex((l) => l.id === lessonId);
     if (idx < 0) return;
     const done = new Set(this.store.completedIds());
     this.store.db.transaction(() => {
       this.all.forEach((l, i) => {
-        if (i < idx && !done.has(l.id)) this.store.completeLesson(l.id, null);
+        if (i < idx && !done.has(l.id)) this.store.completeLesson(l.id, null, true);
         if (i >= idx) this.store.db.prepare("DELETE FROM lesson_progress WHERE lesson_id = ?").run(l.id);
       });
     })();

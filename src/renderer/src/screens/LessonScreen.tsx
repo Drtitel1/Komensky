@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OpenLesson } from "@shared/ipc";
 import type { Phase } from "@shared/types";
 import { btnGood, btnSoft, Card, fmtTime } from "../components/ui";
 import { useLessonSession } from "../lesson/useLessonSession";
+import PinPrompt from "../components/PinPrompt";
 
 const PHASE_LABEL: Record<Phase, string> = {
   WARMUP: "Rozcvička",
@@ -18,6 +19,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 export default function LessonScreen({ data, onExit }: { data: OpenLesson; onExit: () => void }) {
   const s = useLessonSession(data, () => undefined);
+  const [skipAsk, setSkipAsk] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -150,6 +152,23 @@ export default function LessonScreen({ data, onExit }: { data: OpenLesson; onExi
           <button onClick={leave} className={`${btnSoft} mt-6 text-base`}>
             {s.finished ? "Zpět na přehled" : "Skončit a uložit"}
           </button>
+          {!s.finished && (
+            <button onClick={() => setSkipAsk(true)} className="mt-3 text-sm text-ink/50 underline" data-testid="skip-lesson">
+              Přeskočit lekci (kód správce)
+            </button>
+          )}
+          {skipAsk && (
+            <PinPrompt
+              title="Přeskočit lekci"
+              text="Lekce se ukončí, označí se jako přeskočená a odemkne se další. Zadejte kód správce."
+              confirmLabel="Přeskočit lekci"
+              action={(pin) => window.komensky.lesson.skip(data.lesson.id, pin)}
+              onClose={(done) => {
+                setSkipAsk(false);
+                if (done) leave();
+              }}
+            />
+          )}
         </Card>
 
         <div className="flex min-h-0 flex-col gap-4">

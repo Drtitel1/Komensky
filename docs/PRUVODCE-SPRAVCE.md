@@ -31,6 +31,32 @@
 **Záloha:** obsahuje postup, odpovědi, plány, přepisy a PIN. Gemini klíč se nezálohuje – po přeinstalaci ho zadáš znovu. Zálohu ukládej občas na flash disk nebo do cloudu.
 Data leží v `%APPDATA%\komensky\` (soubor `komensky.db`, logy v `logs\main.log`). Při odinstalaci se **nemažou**.
 
+## 3b. Učivo: úprava, import a generování kurzů (⚙️ → 🔒 Správce → **Učivo**)
+
+Kurz = předmět → etapy → lekce. Každá lekce má **cíle**, **klíčové poznatky** a **očíslované odstavce zdroje (Z1, Z2…)**. Odstavce jsou *jediná fakta, která smí učitel učit* a ze kterých se tvoří otázky.
+
+| Akce | Co dělá |
+|---|---|
+| **Nastavit jako aktivní** | přepne, který kurz se učí. **Každý kurz má vlastní postup**, takže se dá přepínat sem a tam bez ztráty. |
+| **Upravit** | formulářový editor (předmět, ročník, věk, pokyny pro učitele, etapy, lekce, cíle, poznatky, odstavce; přidání, smazání a přesouvání) nebo záložka **JSON**. Neplatný kurz se neuloží a aplikace česky řekne proč. |
+| **✨ Vygenerovat kurz (AI)** | zadáte předmět, ročník, věk, počet etap a lekcí a (doporučeno) **vložíte studijní materiál** nebo ho načtete ze souboru `.txt`/`.md`. Gemini navrhne osnovu, napíše obsah každé etapy a ověří ho; **s materiálem se kurz staví jen z něj a kontroluje se proti němu**. Výsledek se otevře v editoru – *před uložením ho projděte*. Bez materiálu píše texty AI sama a kurz je označen „vygenerovaný AI“. |
+| **➕ Nový prázdný kurz** | začnete od nuly v editoru. |
+| **📂 Importovat / Export** | kurz je jeden soubor `.json` (dá se sdílet mezi počítači). Import vždy vytvoří *nový* kurz. |
+| **Obnovit původní** | vrátí původní kurz Matematika 3. třída (postup zůstane). |
+| **Smazat** | smaže kurz **i postup, odpovědi a přepisy jeho lekcí** (původní kurz smazat nejde). |
+
+**Pokyny pro učitele** (pole v kurzu) se přidají do systémové instrukce učitele, např. u angličtiny: *„Slovíčka říkej anglicky a hned je česky vysvětli.“* Pro jiné předměty než matematiku se přestanou používat matematická pravidla (čtení znamének apod.).
+
+**Upravil jsi text lekce, která už má plán?** Plán se při prvním spuštění lekce vytvoří z učiva a pak se už nemění. Po úpravě se zobrazí hláška s tlačítkem *Smazat plány těchto lekcí* (plán se vytvoří znovu při příštím spuštění; smaže se i rozpracovaný postup té lekce). Ostatní lekce se nemění.
+
+Tip: nejdřív vygenerujte **1 etapu × 2–3 lekce** a ověřte kvalitu; velký kurz trvá minuty a s bezplatným klíčem Google déle (limit požadavků za minutu).
+
+## 3c. Přeskočení lekce kódem správce
+
+- Na úvodní obrazovce pod tlačítkem lekce je odkaz **„Přeskočit tuto lekci (kód správce)“**; podobný je i v obrazovce lekce. Po zadání **PINu správce** se lekce označí jako *přeskočená* (⏭️, bez skóre) a odemkne se další. Kód se zadává pokaždé zvlášť (po 5 chybách je 30 s pauza).
+- Ve správcovské části v záložce **Postup**: *Přeskočit aktuální lekci* nebo *Přeskočit na lekci…* (dřívější lekce se označí jako přeskočené).
+- Přeskočit jde jen **aktuální** lekce. Přeskočená lekce se nezapočítává do opakování (spaced repetition).
+
 ## 4. Vydání nové verze (ty na svém počítači)
 
 > Stručný postup je v [RELEASING.md](../RELEASING.md).

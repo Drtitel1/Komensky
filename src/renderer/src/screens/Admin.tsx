@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { AdminOverview } from "@shared/ipc";
 import type { AppSettings, Curriculum } from "@shared/types";
 import { btnGood, btnPrimary, btnSoft, field, Modal } from "../components/ui";
+import CourseManager from "./CourseManager";
 
-type Tab = "overview" | "transcripts" | "plans" | "progress" | "backup" | "settings";
-const TABS: [Tab, string][] = [["overview", "Přehled"], ["transcripts", "Přepisy"], ["plans", "Plány lekcí"], ["progress", "Postup"], ["backup", "Záloha"], ["settings", "Klíč a modely"]];
+type Tab = "overview" | "courses" | "transcripts" | "plans" | "progress" | "backup" | "settings";
+const TABS: [Tab, string][] = [["overview", "Přehled"], ["courses", "Učivo"], ["transcripts", "Přepisy"], ["plans", "Plány lekcí"], ["progress", "Postup"], ["backup", "Záloha"], ["settings", "Klíč a modely"]];
 
-export default function Admin({ curriculum, inLesson, onClose }: { curriculum: Curriculum; inLesson: boolean; onClose: () => void }) {
+export default function Admin({ curriculum, inLesson, onClose, onChanged }: { curriculum: Curriculum; inLesson: boolean; onClose: () => void; onChanged: () => void }) {
   const api = window.komensky.admin;
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState("");
@@ -14,7 +15,11 @@ export default function Admin({ curriculum, inLesson, onClose }: { curriculum: C
   const [tab, setTab] = useState<Tab>("overview");
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const lessons = curriculum.stages.flatMap((s) => s.lessons);
-  const [sel, setSel] = useState(lessons[0].id);
+  const [sel, setSel] = useState(lessons[0]?.id ?? "");
+  // the active course may change (Učivo tab): keep the selected lesson valid
+  useEffect(() => {
+    if (!lessons.some((l) => l.id === sel)) setSel(lessons[0]?.id ?? "");
+  }, [lessons, sel]);
 
   const close = () => {
     void api.lock();
@@ -53,6 +58,7 @@ export default function Admin({ curriculum, inLesson, onClose }: { curriculum: C
       </div>
       {note && <p className={`mb-3 rounded-xl p-3 text-base ${note.ok ? "bg-good-soft" : "bg-bad-soft text-bad"}`}>{note.text}</p>}
       {tab === "overview" && <Overview />}
+      {tab === "courses" && <CourseManager inLesson={inLesson} onChanged={onChanged} setNote={setNote} />}
       {tab === "transcripts" && <Transcripts lessons={lessons} sel={sel} setSel={setSel} />}
       {tab === "plans" && <Plans lessons={lessons} sel={sel} setSel={setSel} setNote={setNote} inLesson={inLesson} />}
       {tab === "progress" && <Progress lessons={lessons} sel={sel} setSel={setSel} setNote={setNote} inLesson={inLesson} />}
@@ -91,7 +97,7 @@ function Overview() {
           {d.lessons.map((l) => (
             <tr key={l.id} className="border-b border-brand-soft/60">
               <td className="py-1">{l.id} {l.title}</td>
-              <td>{l.status === "completed" ? "hotovo" : l.status === "in_progress" ? "rozpracováno" : l.hasPlan ? "plán připraven" : "—"}</td>
+              <td>{l.status === "skipped" ? "přeskočeno" : l.status === "completed" ? "hotovo" : l.status === "in_progress" ? "rozpracováno" : l.hasPlan ? "plán připraven" : "—"}</td>
               <td>{l.score !== null ? `${Math.round(l.score * 100)} %` : "—"}</td>
               <td>{l.answers}</td><td>{l.wrong}</td>
               <td>{l.completedAt ? new Date(l.completedAt).toLocaleDateString("cs-CZ") : "—"}</td>
@@ -181,6 +187,11 @@ function Progress({ lessons, sel, setSel, setNote, inLesson }: { lessons: { id: 
           await window.komensky.admin.resetLesson(sel);
           setNote({ ok: true, text: `Lekce ${sel} byla vynulována.` });
         }}>Vynulovat tuto lekci</button>
+        <button className={btnSoft} disabled={inLesson} onClick={async () => {
+          if (!confirm(`Přeskočit aktuální lekci? Bude označena jako přeskočená a odemkne se další.`)) return;
+          const r = await window.komensky.admin.skipLesson(sel);
+          setNote(r.ok ? { ok: true, text: "Aktuální lekce byla přeskočena." } : { ok: false, text: r.error ?? "Přeskočit jde jen aktuální lekce (vyberte ji v seznamu)." });
+        }}>Přeskočit aktuální lekci (vybranou)</button>
         <button className={btnSoft} disabled={inLesson} onClick={async () => {
           if (!confirm(`Přeskočit na lekci ${sel}? Dřívější lekce se označí jako hotové, tato a další se vynulují.`)) return;
           await window.komensky.admin.jumpTo(sel);

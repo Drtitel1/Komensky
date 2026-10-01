@@ -34,10 +34,10 @@ export const TOOL_DECLARATIONS = [
 ];
 
 /** The part of LiveConnectConfig that is locked into the ephemeral token (the renderer cannot change it). */
-export function buildLiveConfig(o: { subject: string; age: number; lesson: LessonDef; plan: Plan; settings: AppSettings; stateSummary?: string }) {
+export function buildLiveConfig(o: { subject: string; age: number; level?: string; notes?: string; lesson: LessonDef; plan: Plan; settings: AppSettings; stateSummary?: string }) {
   const config: Record<string, unknown> = {
     responseModalities: ["AUDIO"],
-    systemInstruction: buildSystemInstruction({ subject: o.subject, age: o.age, lesson: o.lesson, plan: o.plan, stateSummary: o.stateSummary }),
+    systemInstruction: buildSystemInstruction({ subject: o.subject, age: o.age, level: o.level, notes: o.notes, lesson: o.lesson, plan: o.plan, stateSummary: o.stateSummary }),
     tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
     inputAudioTranscription: {},
     outputAudioTranscription: {},

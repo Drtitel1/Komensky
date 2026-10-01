@@ -42,7 +42,7 @@ Actions → **Release** → *Run workflow* (vybereš větev). Workflow sám vytv
 Pokud se nic neděje: `%APPDATA%\komensky\logs\main.log` (hledej `electron-updater`) a zkontroluj, že je repozitář veřejný a Release není *draft*.
 
 ## Obsah / učivo
-`content/curriculum.json` je součástí aplikace. Změna učiva = commit + nové vydání. Plán už zahájené lekce se nemění (jde jen přegenerovat ve správcovské části).
+`content/curriculum.json` je **výchozí kurz** přibalený v aplikaci; při startu se uloží do databáze. Změnu původního znění vydáš tak, že upravíš JSON, **zvýšíš `BUNDLED_VERSION` v `src/main/index.ts`** a uděláš nové vydání: kurz, který správce na počítači neupravoval, se nahradí novým zněním; **kurz, který správce upravil, se nepřepíše** (zůstanou jeho úpravy; lze ho tlačítkem „Obnovit původní“ vrátit). Další kurzy (vlastní, vygenerované, importované) žijí jen v databázi na počítači a aktualizace se jich netýká. Plán už zahájené lekce se nemění.
 
 ## Podepisování instalátoru (nepovinné, později)
 Bez podpisu ukazuje Windows SmartScreen / Smart App Control varování. Až budeš mít certifikát: přidej secrets `CSC_LINK` (base64 `.pfx`) a `CSC_KEY_PASSWORD` a odkomentuj řádky v `.github/workflows/release.yml`; poté přidej `publisherName` do `electron-builder.yml` (pod `win:`), aby se aktualizace ověřovaly proti stejnému vydavateli. Alternativa: Azure Trusted Signing (komentáře v `electron-builder.yml`). Podpis nemění nic v kódu aplikace.

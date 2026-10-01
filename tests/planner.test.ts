@@ -32,7 +32,7 @@ vi.mock("../src/main/gemini", () => ({
 const { generatePlan } = await import("../src/main/planner");
 
 const curriculum: Curriculum = {
-  schema: 1, subject: "Matematika", age: 8,
+  schema: 1, id: "test", subject: "Matematika", age: 8,
   stages: [{ id: 1, title: "E", description: "", lessons: [{ id: "1.1", title: "Násobení", objectives: ["o"], keyFacts: ["k"], passages: [{ id: "Z1", text: "Násobení je opakované sčítání." }] }] }],
 };
 const run = () => generatePlan({ key: "k", model: "m", curriculum, lesson: curriculum.stages[0].lessons[0], onProgress: () => {} });

@@ -5,7 +5,7 @@ Vše běží lokálně na počítači; jediné externí služby jsou **Gemini AP
 
 - Učitel mluví česky (Gemini 3.8 Live, obousměrný zvuk), ptá se a opravuje odpovědi. **Push-to-talk:** žačka mluví, jen když drží velké tlačítko nebo mezerník; stisk učitele okamžitě přeruší. Lekce trvá 30–45 minut.
 - Lekce řídí **stavový automat v aplikaci** (`src/shared/engine.ts`): `WARMUP → (EXPLAIN → CHECK → FEEDBACK) × 5–8 → FINAL_QUIZ → SUMMARY`, při výsledku pod 75 % `REVIEW → RETEST`. Aplikace, ne model, je zdrojem pravdy o postupu.
-- Učivo je přibaleno v aplikaci (`content/curriculum.json`, 5 etap / 18 lekcí). Plán každé lekce (5–8 částí, kontrolní otázky s klíči, závěrečný kvíz 10–15 otázek) vygeneruje `PREP_MODEL` jednou, ověří druhým průchodem (fact-check) a uloží do SQLite.
+- Učivo: původní kurz (`content/curriculum.json`, 5 etap / 18 lekcí) je přibalen v aplikaci a při prvním spuštění se uloží do databáze. Ve správcovské části **Učivo** se kurzy upravují, importují/exportují, **generují pomocí AI** (nejlépe ze vloženého studijního materiálu) a přepínají (každý kurz má vlastní postup). **Přeskočení lekce** vyžaduje PIN správce. Plán každé lekce (5–8 částí, kontrolní otázky s klíči, závěrečný kvíz 10–15 otázek) vygeneruje `PREP_MODEL` jednou, ověří druhým průchodem (fact-check) a uloží do SQLite.
 - Postup, odpovědi, opakování (spaced repetition), plány a přepisy jsou v SQLite (`%APPDATA%\komensky\komensky.db`) s bezpečnými migracemi.
 
 Vydání nové verze: [RELEASING.md](RELEASING.md)
@@ -49,7 +49,7 @@ Testovací režim (`KOMENSKY_TEST=1`, jen v nebalené aplikaci) používá deter
 ## Struktura
 
 ```
-content/curriculum.json   učivo (zdroj pravdy, součást aplikace)
+content/curriculum.json   původní kurz (výchozí; další kurzy jsou v databázi)
 src/shared/               typy, stavový automat, prompty (česky), SRS, IPC kontrakt
 src/main/                 hlavní proces
 src/preload/              most do rendereru

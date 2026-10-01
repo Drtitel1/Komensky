@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Overview, PlanProgress } from "@shared/ipc";
 import { btnPrimary, Card } from "../components/ui";
+import PinPrompt from "../components/PinPrompt";
 
-export default function Home({ ov, onStart, busy, error }: { ov: Overview; onStart: () => void; busy: boolean; error: string | null }) {
+export default function Home({ ov, onStart, busy, error, onSkipped }: { ov: Overview; onStart: () => void; busy: boolean; error: string | null; onSkipped: () => void }) {
   const [prog, setProg] = useState<PlanProgress | null>(null);
+  const [skipAsk, setSkipAsk] = useState(false);
   useEffect(() => {
     const off = window.komensky.plan.onProgress(setProg);
     return () => {
@@ -36,6 +38,21 @@ export default function Home({ ov, onStart, busy, error }: { ov: Overview; onSta
               </div>
             )}
             {error && <p className="mt-4 rounded-xl bg-bad-soft p-3 text-base text-bad">{error}</p>}
+            <button onClick={() => setSkipAsk(true)} disabled={busy} className="mt-5 block text-sm text-ink/50 underline" data-testid="skip-link">
+              Přeskočit tuto lekci (kód správce)
+            </button>
+            {skipAsk && (
+              <PinPrompt
+                title="Přeskočit lekci"
+                text={`Lekce „${current.title}“ se označí jako přeskočená a odemkne se další. Pro přeskočení zadejte kód správce.`}
+                confirmLabel="Přeskočit lekci"
+                action={(pin) => window.komensky.lesson.skip(current.id, pin)}
+                onClose={(done) => {
+                  setSkipAsk(false);
+                  if (done) onSkipped();
+                }}
+              />
+            )}
           </>
         ) : (
           <div className="text-center">
@@ -63,11 +80,12 @@ export default function Home({ ov, onStart, busy, error }: { ov: Overview; onSta
             <ul className="mt-1 flex flex-col gap-1">
               {s.lessons.map((l) => (
                 <li key={l.id} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${l.status === "current" ? "bg-brand-soft font-semibold" : ""}`}>
-                  <span>{l.status === "completed" ? "✅" : l.status === "current" ? "▶️" : "🔒"}</span>
+                  <span>{l.status === "completed" ? (l.skipped ? "⏭️" : "✅") : l.status === "current" ? "▶️" : "🔒"}</span>
                   <span className={l.status === "locked" ? "text-ink/45" : ""}>
                     {l.id} {l.title}
                   </span>
-                  {l.status === "completed" && l.score !== null && <span className="ml-auto text-sm text-ink/60">{Math.round(l.score * 100)} %</span>}
+                  {l.status === "completed" && l.skipped && <span className="ml-auto text-sm text-ink/50">přeskočeno</span>}
+                  {l.status === "completed" && !l.skipped && l.score !== null && <span className="ml-auto text-sm text-ink/60">{Math.round(l.score * 100)} %</span>}
                 </li>
               ))}
             </ul>

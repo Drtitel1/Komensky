@@ -9,6 +9,7 @@ import { LessonService } from "./lessons";
 import { generatePlan } from "./planner";
 import { fakeGenerate } from "./fakePlan";
 import { registerIpc } from "./ipc";
+import { loadActiveCourse } from "./coursesIpc";
 import { APP_ORIGIN, DEV_URL, hardenSession, hardenWindow, registerProtocol, registerScheme } from "./security";
 import { Updater } from "./updater";
 import { loadWindowState, trackWindowState } from "./windowState";
@@ -51,11 +52,15 @@ if (!app.requestSingleInstanceLock()) {
       app.quit();
       return;
     }
-    const svc = new LessonService(store, curriculum as unknown as Curriculum, TEST ? fakeGenerate : generatePlan);
+    // bump when content/curriculum.json changes: an UNEDITED built-in course is then replaced by the new bundled version
+    const BUNDLED_VERSION = 1;
+    const bundled = curriculum as unknown as Curriculum;
+    const svc = new LessonService(store, bundled, TEST ? fakeGenerate : generatePlan);
+    loadActiveCourse(store, svc, bundled, BUNDLED_VERSION);
 
     const rendererRoot = join(__dirname, "../renderer");
     if (app.isPackaged || !DEV_URL) registerProtocol(rendererRoot);
-    registerIpc({ store, svc, updater, win: () => win });
+    registerIpc({ store, svc, updater, win: () => win, bundled, bundledVersion: BUNDLED_VERSION });
 
     const ws = loadWindowState();
     win = new BrowserWindow({

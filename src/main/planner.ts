@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Curriculum, LessonDef, Part, Plan, Question } from "@shared/types";
+import { isMathSubject, learnerLine } from "@shared/course";
 import { PlanSchema } from "@shared/types";
 import { generateJson } from "./gemini";
 import log from "./log";
@@ -7,19 +8,23 @@ import log from "./log";
 /* Lesson-plan generation (PREP_MODEL). Runs in the main process only.
  * outline -> check questions per part -> final quiz -> independent fact-check (max 2 regenerations, leftovers are logged as flags). */
 
-const AGE = 8;
-const GRADE = "3. třída základní školy";
 const MAX_FIXES = 2;
 
-const SYSTEM_TEACHER = `Jsi zkušený autor učebních plánů matematiky pro ${AGE}leté dítě (${GRADE}, Česko). Píšeš VÝHRADNĚ česky.
+/* prompts that depend on the course (subject, level, notes); maths-specific rules only apply to maths courses */
+const teacherSystem = (c: Curriculum) => `Jsi zkušený autor učebních plánů předmětu ${c.subject} pro ${learnerLine(c)}. Píšeš VÝHRADNĚ česky.
 PRAVIDLA PRAVDIVOSTI (nejvyšší priorita):
 - Smíš používat POUZE fakta, pravidla a příklady uvedené ve ZDROJOVÉM MATERIÁLU. Nic nepřidávej z vlastní paměti, ani kdyby to byla pravda.
-- Nové příklady smíš vymýšlet jen tehdy, když používají výhradně pravidla ze zdroje a všechny výpočty jsou správně (zkontroluj je dvakrát).
-- Nikdy nepracuj s látkou, která není ve zdroji ani v "dřívější znalosti".`;
+- Nové příklady smíš vymýšlet jen tehdy, když používají výhradně pravidla ze zdroje a vše v nich je správně (zkontroluj to dvakrát).
+- Nikdy nepracuj s látkou, která není ve zdroji ani v "dřívější znalosti".${c.notes ? `\nDALŠÍ POKYNY KE KURZU: ${c.notes}` : ""}`;
 
-const SYSTEM_CHECKER = `Jsi přísný odborný korektor školní matematiky pro ${GRADE} v Česku. Porovnáváš vygenerovaný učební plán se ZDROJOVÝM MATERIÁLEM.
-Kontroluješ: (1) každé tvrzení a klíčový poznatek musí být ve zdroji nebo z něj přímo a správně odvozen; (2) každý početní příklad přepočítej; (3) klíč každé otázky musí být správný a jednoznačný, u otázek s výběrem právě jedna správná možnost; (4) otázky se týkají jen látky ze zdroje a dřívější znalosti; (5) cíle a poznatky částí odpovídají zdroji.
+const checkerSystem = (c: Curriculum) => `Jsi přísný odborný korektor předmětu ${c.subject} pro ${learnerLine(c)}. Porovnáváš vygenerovaný učební plán se ZDROJOVÝM MATERIÁLEM.
+Kontroluješ: (1) každé tvrzení a klíčový poznatek musí být ve zdroji nebo z něj přímo a správně odvozen; (2) ${isMathSubject(c.subject) ? "každý početní příklad přepočítej" : "každý příklad a údaj ověř"}; (3) klíč každé otázky musí být správný a jednoznačný, u otázek s výběrem právě jedna správná možnost; (4) otázky se týkají jen látky ze zdroje a dřívější znalosti; (5) cíle a poznatky částí odpovídají zdroji.
 Buď důkladný, ale nevymýšlej si problémy: stylistické drobnosti nejsou chyba. Odpovídej česky, stručně.`;
+
+const questionRules = (c: Curriculum) => `POŽADAVKY NA OTÁZKY (budou se pokládat NAHLAS a dítě bude odpovídat hlasem):
+- Typy: "mc" (3 až 4 možnosti, právě jedna správná; možnosti krátké, ať se dají přečíst nahlas), "short" (krátká odpověď – ${isMathSubject(c.subject) ? "číslo nebo slovo" : "slovo nebo krátké spojení"}), "explain" (vysvětli vlastními slovy; používej střídmě).
+- Každá otázka má: type, prompt (zadání česky${isMathSubject(c.subject) ? "; symboly · : + − = < > smíš psát" : ""}), options a correctIndex (jen u mc, číslováno od 0), answer (správná odpověď; u explain 1–3 věty s klíčovými body), accepted (jen u short: 2 až 5 dalších přijatelných zápisů odpovědi${isMathSubject(c.subject) ? ", např. číslo číslicemi i slovy česky, s jednotkou i bez ní" : ", např. synonyma, s členem i bez něj"}), explanation (krátké laskavé vysvětlení), sourceId (id odstavce zdroje, např. "Z3").
+- U "short" musí být jedna jednoznačná správná odpověď. Nikdy se neptej na to, co ve zdroji není.`;
 
 const sourceBlock = (l: LessonDef) =>
   `ZDROJOVÝ MATERIÁL (lekce ${l.id} – ${l.title}):\n${l.passages.map((p) => `[${p.id}] ${p.text}`).join("\n")}\n\nCÍLE LEKCE:\n${l.objectives.map((o) => "- " + o).join("\n")}\n\nKLÍČOVÉ POZNATKY LEKCE:\n${l.keyFacts.map((o) => "- " + o).join("\n")}`;
@@ -132,6 +137,9 @@ export interface PlanRun {
 
 export async function generatePlan(run: PlanRun): Promise<Plan> {
   const { key, model, curriculum, lesson, onProgress } = run;
+  const SYSTEM_TEACHER = teacherSystem(curriculum);
+  const SYSTEM_CHECKER = checkerSystem(curriculum);
+  const QUESTION_RULES = questionRules(curriculum);
   const ctx = `${sourceBlock(lesson)}\n\n${priorKnowledge(curriculum, lesson.id)}`;
   let done = 0;
   const total = 5;

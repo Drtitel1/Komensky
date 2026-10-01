@@ -84,23 +84,41 @@ describe("migrations", () => {
     expect(db.pragma("user_version", { simple: true })).toBe(MIGRATIONS.length);
   });
 
-  it("keeps her data and writes a .bak file when an older database is upgraded", () => {
+  it("upgrades a real v1 database (app 1.0/1.1) to the current schema without losing her progress, and writes a .bak file", () => {
     const file = join(tmp(), "komensky.db");
-    // a "v1 database" from an earlier app version
     const old = new Database(file);
-    old.exec(MIGRATIONS[0]);
+    old.exec(MIGRATIONS[0]); // exactly what the first release created
     old.pragma("user_version = 1");
     old.prepare("INSERT INTO lesson_progress (lesson_id, status, score, started_at, completed_at, updated_at) VALUES ('1.1','completed',0.9,'t','t','t')").run();
+    old.prepare("INSERT INTO answers (lesson_id, question_id, context, given, correct, feedback, revealed, at) VALUES ('1.1','1.1:p1:q1','check','x',1,'',0,'t')").run();
+    old.prepare("INSERT INTO kv (key, value) VALUES ('pin_hash','abc')").run();
     old.close();
 
-    // pretend a newer app version appended a migration
+    const s = new Store(file);
+    expect(s.db.pragma("user_version", { simple: true })).toBe(MIGRATIONS.length);
+    expect(s.completedIds()).toEqual(["1.1"]);
+    expect(s.getProgress("1.1")?.skipped).toBe(0); // new column defaults to "not skipped"
+    expect(s.answerStats()).toEqual([{ lesson_id: "1.1", total: 1, wrong: 0 }]);
+    expect(s.kvGet("pin_hash")).toBe("abc");
+    expect(s.listCourses()).toEqual([]); // the built-in course is seeded by the app on start
+    s.close();
+    expect(readdirSync(join(file, ".."))).toContain("komensky.db.pre-v1.bak");
+  });
+
+  it("a future migration is applied once and keeps data", () => {
+    const file = join(tmp(), "komensky.db");
+    const s1 = new Store(file);
+    s1.completeLesson("1.1", 0.9);
+    s1.close();
     MIGRATIONS.push("ALTER TABLE lesson_progress ADD COLUMN note TEXT;");
     try {
-      const s = new Store(file);
-      expect(s.db.pragma("user_version", { simple: true })).toBe(2);
-      expect(s.completedIds()).toEqual(["1.1"]);
-      s.close();
-      expect(readdirSync(join(file, ".."))).toContain("komensky.db.pre-v1.bak");
+      const s2 = new Store(file);
+      expect(s2.db.pragma("user_version", { simple: true })).toBe(MIGRATIONS.length);
+      expect(s2.completedIds()).toEqual(["1.1"]);
+      s2.close();
+      const s3 = new Store(file); // opening again must not re-run it
+      expect(s3.completedIds()).toEqual(["1.1"]);
+      s3.close();
     } finally {
       MIGRATIONS.pop();
     }

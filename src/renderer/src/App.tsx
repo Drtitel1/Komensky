@@ -29,6 +29,12 @@ export default function App() {
     setOv(await api.progress.overview());
   }, [api]);
 
+  /** the active course (or its content) may have changed in the admin area */
+  const reloadCourse = useCallback(async () => {
+    setCurriculum(await api.content.curriculum());
+    await refresh();
+  }, [api, refresh]);
+
   const boot = useCallback(async () => {
     try {
       const st = await api.setup.status();
@@ -90,12 +96,12 @@ export default function App() {
           </div>
         )}
         {phase === "setup" && <Setup onDone={() => void boot()} />}
-        {phase === "home" && ov && <Home ov={ov} onStart={start} busy={busy} error={err} />}
+        {phase === "home" && ov && <Home ov={ov} onStart={start} busy={busy} error={err} onSkipped={() => void refresh()} />}
         {phase === "lesson" && lesson && <LessonScreen key={lesson.lesson.id} data={lesson} onExit={exitLesson} />}
       </main>
       <UpdateBanner status={update} inLesson={inLesson} />
       {modal === "settings" && <SettingsModal status={update} inLesson={inLesson} onClose={() => setModal(null)} onAdmin={() => setModal("admin")} />}
-      {modal === "admin" && curriculum && <Admin curriculum={curriculum} inLesson={inLesson} onClose={() => { setModal(null); void refresh(); }} />}
+      {modal === "admin" && curriculum && <Admin curriculum={curriculum} inLesson={inLesson} onChanged={() => void reloadCourse()} onClose={() => { setModal(null); void reloadCourse(); }} />}
     </div>
   );
 }
