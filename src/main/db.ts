@@ -77,9 +77,14 @@ export class Store {
   readonly db: Database.Database;
   constructor(file: string) {
     this.db = new Database(file);
-    this.db.pragma("journal_mode = WAL");
-    this.db.pragma("foreign_keys = ON");
-    migrate(this.db, file === ":memory:" ? undefined : file);
+    try {
+      this.db.pragma("journal_mode = WAL");
+      this.db.pragma("foreign_keys = ON");
+      migrate(this.db, file === ":memory:" ? undefined : file);
+    } catch (e) {
+      this.db.close(); // never leave the file locked (Windows keeps it open otherwise) when the schema is newer or broken
+      throw e;
+    }
   }
   close() {
     this.db.close();

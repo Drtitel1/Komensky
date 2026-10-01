@@ -16,7 +16,7 @@ const tmp = () => {
   dirs.push(d);
   return d;
 };
-afterEach(() => dirs.splice(0).forEach((d) => rmSync(d, { recursive: true, force: true })));
+afterEach(() => dirs.splice(0).forEach((d) => rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })));
 
 describe("store", () => {
   it("saves progress, answers and spaced repetition", () => {

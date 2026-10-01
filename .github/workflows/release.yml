@@ -30,21 +30,25 @@ jobs:
         shell: bash
         run: |
           v="$(node -p "require('./package.json').version")"
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            if [ "v$v" != "${GITHUB_REF_NAME}" ]; then echo "Tag ${GITHUB_REF_NAME} does not match package.json version $v"; exit 1; fi
-          else
-            # manual run: create the tag for this commit if it does not exist yet
-            if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null 2>&1; then echo "tag v$v already exists"; else
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git tag -a "v$v" -m "Komenský $v"
-              git push origin "v$v"
-            fi
-          fi
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "v$v" != "${GITHUB_REF_NAME}" ]; then echo "Tag ${GITHUB_REF_NAME} does not match package.json version $v"; exit 1; fi
+          echo "Releasing version $v"
 
       - run: npm run typecheck
       - run: npm test
       - run: npx electron-vite build
+
+      # manual run: the tag is created only AFTER typecheck, tests and build succeeded
+      - name: Create tag for a manual run
+        if: github.ref_type != 'tag'
+        shell: bash
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null 2>&1; then echo "tag v$v already exists"; else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "v$v" -m "Komenský $v"
+            git push origin "v$v"
+          fi
 
       - name: Build installer and publish GitHub Release
         run: npx electron-builder --win --x64 --publish always
