@@ -50,6 +50,18 @@ jobs:
             git push origin "v$v"
           fi
 
+      # electron-builder uploads files in parallel; when the release does not exist yet each upload may create its OWN release
+      # (duplicate releases with split files). Creating it once up front avoids that.
+      - name: Make sure the GitHub Release exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          if gh release view "$v" >/dev/null 2>&1; then echo "release $v already exists"; else
+            gh release create "$v" --title "${v#v}" --notes "Komenský ${v#v}" --verify-tag
+          fi
+
       - name: Build installer and publish GitHub Release
         run: npx electron-builder --win --x64 --publish always
         env:
@@ -61,3 +73,17 @@ jobs:
           # AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           # AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           # AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      # the update mechanism needs exactly ONE release for the tag with the installer AND latest.yml
+      - name: Verify release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          n="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq "[.[] | select(.tag_name==\"$v\")] | length" | paste -sd+ - | bc)"
+          names="$(gh release view "$v" --json assets --jq '.assets[].name')"
+          echo "releases for $v: $n"; echo "$names"
+          [ "$n" = "1" ] || { echo "expected exactly one release for $v"; exit 1; }
+          echo "$names" | grep -qx 'latest.yml' || { echo "latest.yml is missing"; exit 1; }
+          echo "$names" | grep -q '^Komensky-Setup-.*\.exe$' || { echo "installer is missing"; exit 1; }
