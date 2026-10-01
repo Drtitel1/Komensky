@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cleanTutorText } from "@shared/czech";
 import { LessonEngine, type EngineView } from "@shared/engine";
 import type { OpenLesson } from "@shared/ipc";
 import { LiveConnection, type ConnState } from "../live/connection";
@@ -71,7 +72,8 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
       open.current[role] = null;
       const text = (texts.current.get(id) ?? "").trim();
       texts.current.delete(id);
-      if (text) void api.lesson.transcript(lessonId, role, text, phaseNow());
+      const shown = role === "model" ? cleanTutorText(text).trim() : text;
+      if (shown) void api.lesson.transcript(lessonId, role, shown, phaseNow());
     },
     [api, lessonId],
   );
@@ -86,11 +88,11 @@ export function useLessonSession(data: OpenLesson, onFinished: () => void) {
         open.current[role] = id;
         const nid = id;
         texts.current.set(nid, text);
-        setMsgs((all) => [...all.slice(-60), { id: nid, role, text }]);
+        setMsgs((all) => [...all.slice(-60), { id: nid, role, text: role === "model" ? cleanTutorText(text) : text }]);
       } else {
         const cur = id;
         texts.current.set(cur, (texts.current.get(cur) ?? "") + text);
-        setMsgs((all) => all.map((m) => (m.id === cur ? { ...m, text: m.text + text } : m)));
+        setMsgs((all) => all.map((m) => (m.id === cur ? { ...m, text: role === "model" ? cleanTutorText(m.text + text) : m.text + text } : m)));
       }
     },
     [closeMsg],

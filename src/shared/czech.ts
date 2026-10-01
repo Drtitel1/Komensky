@@ -54,3 +54,15 @@ export const normalizeText = (s: string) =>
     .replace(/[^a-z0-9,.\- ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+const TOOL_NAMES = "part_explained|record_answer|request_next_step|flag_uncertain|lesson_complete";
+
+/** Removes control-call leftovers and LaTeX/markup that the voice model sometimes writes into its transcript. */
+export function cleanTutorText(s: string): string {
+  return s
+    .replace(/\\(?:mathrm|text|operatorname|mathit)\s*\{([^}]*)\}/g, "$1")
+    .replace(new RegExp(`\\\\?(?:${TOOL_NAMES.replace(/_/g, "\\\\?_")})\\s*\\([^)]*\\)?`, "g"), "")
+    .replace(new RegExp(`(?:${TOOL_NAMES})`, "g"), "")
+    .replace(/\\[a-zA-Z]+/g, "")
+    .replace(/[ \t]{2,}/g, " ");
+}
