@@ -3,7 +3,7 @@ import type { Overview, PlanProgress } from "@shared/ipc";
 import { btnPrimary, Card } from "../components/ui";
 import PinPrompt from "../components/PinPrompt";
 
-export default function Home({ ov, onStart, busy, error, onSkipped }: { ov: Overview; onStart: () => void; busy: boolean; error: string | null; onSkipped: () => void }) {
+export default function Home({ ov, onStart, onPractice, busy, error, onSkipped }: { ov: Overview; onPractice: () => void; onStart: () => void; busy: boolean; error: string | null; onSkipped: () => void }) {
   const [prog, setProg] = useState<PlanProgress | null>(null);
   const [skipAsk, setSkipAsk] = useState(false);
   useEffect(() => {
@@ -61,6 +61,14 @@ export default function Home({ ov, onStart, busy, error, onSkipped }: { ov: Over
           </div>
         )}
       </Card>
+
+      <button onClick={onPractice} data-testid="practice-open" className="flex items-center gap-6 rounded-[40px] bg-good-soft p-7 text-left text-ink active:scale-[0.99]">
+        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-warm text-5xl font-extrabold text-brand">×</span>
+        <span>
+          <span className="block text-2xl font-extrabold">Procvičit násobení</span>
+          <span className="block text-base font-semibold opacity-70">Malá násobilka bez učitele – vyber řady a počítej, kolik chceš.</span>
+        </span>
+      </button>
 
       <Card>
         <div className="mb-3 flex items-center justify-between">

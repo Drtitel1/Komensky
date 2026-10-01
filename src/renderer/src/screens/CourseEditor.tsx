@@ -183,7 +183,7 @@ export default function CourseEditor({ initial, isNew, onSave, onCancel, errors,
           </ul>
         </div>
       )}
-      <div className="sticky bottom-0 mt-4 flex gap-3 bg-white py-2">
+      <div className="sticky bottom-0 mt-4 flex gap-3 bg-cream py-2">
         <button className={btnGood} disabled={busy} onClick={save}>
           {busy ? "Ukládám…" : "Uložit kurz"}
         </button>

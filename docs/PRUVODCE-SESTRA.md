@@ -46,3 +46,7 @@ Aplikace se **sama aktualizuje**. Když je nová verze, stáhne se tiše na poza
 - **Později** – nainstaluje se automaticky, až aplikaci zavřeš.
 
 Tvůj postup se **nikdy neztratí**. Verzi aplikace vidíš v **⚙️ Nastavení**, tam je i tlačítko **Zkontrolovat aktualizace**.
+
+## Procvičování násobení
+
+Na úvodní obrazovce je modrozelená dlaždice **Procvičit násobení**. Vyber řady (1–10), počet příkladů (10, 20 nebo 30) a případně i příklady s chybějícím číslem (? × 4 = 20). Odpovídáš klávesnicí (číslice a Enter) nebo velkými tlačítky na obrazovce. Co uděláš špatně, se zeptá ještě jednou později. Funguje bez internetu a bez učitele; nejlepší výsledek si aplikace pamatuje pro každou kombinaci řad.

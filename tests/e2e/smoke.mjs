@@ -215,6 +215,29 @@ await page.getByText("Aktivní kurz: Matematika").waitFor();
 await page.getByLabel("Zavřít").click();
 await page.getByText("2 / 18 lekcí").waitFor();
 console.log("course switch keeps each course's progress");
+
+// multiplication practice: 3x table, 10 questions, answer all correctly via the keyboard
+await page.getByTestId("practice-open").click();
+await page.getByTestId("practice-tables").getByRole("button", { name: "3", exact: true }).click(); // adds 3 to the default 2-5? 3 is on by default -> toggles off
+await page.getByTestId("practice-tables").getByRole("button", { name: "3", exact: true }).click(); // on again
+await page.getByRole("button", { name: "10", exact: true }).last().click();
+await page.getByTestId("practice-start").click();
+for (let i = 0; i < 10; i++) {
+  const prompt = await page.getByTestId("practice-prompt").innerText();
+  const m = prompt.replace(/\s+/g, " ").match(/(\d+) × (\d+)/);
+  if (!m) throw new Error("unexpected practice prompt: " + prompt);
+  await page.keyboard.type(String(Number(m[1]) * Number(m[2])));
+  await page.keyboard.press("Enter");
+  if (i < 9) {
+    await page.getByTestId("practice-feedback").waitFor({ timeout: 4000 });
+    await page.getByTestId("practice-feedback").waitFor({ state: "detached", timeout: 3000 });
+  }
+}
+await page.getByTestId("practice-score").waitFor();
+if (!(await page.getByTestId("practice-score").innerText()).includes("10 z 10")) throw new Error("practice score");
+await page.getByRole("button", { name: "Domů" }).click();
+await page.getByText("2 / 18 lekcí").waitFor();
+console.log("multiplication practice OK");
 await app.close();
 
 // --- persistence across restart (progress must survive)

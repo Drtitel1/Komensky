@@ -5,10 +5,11 @@ import UpdateBanner, { useUpdateStatus } from "./components/UpdateBanner";
 import Admin from "./screens/Admin";
 import Home from "./screens/Home";
 import LessonScreen from "./screens/LessonScreen";
+import Practice from "./screens/Practice";
 import SettingsModal from "./screens/SettingsModal";
 import Setup from "./screens/Setup";
 
-type Phase = "boot" | "setup" | "home" | "lesson" | "error";
+type Phase = "boot" | "setup" | "home" | "lesson" | "practice" | "error";
 
 export default function App() {
   const api = window.komensky;
@@ -73,30 +74,34 @@ export default function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between px-6 py-3">
-        <div>
-          <h1 className="text-2xl font-extrabold text-brand">
-            Komenský <span className="ml-1 align-middle text-sm font-semibold text-ink/40" data-testid="version">{version && `verze ${version}`}</span>
+      <header className="flex items-center justify-between px-8 pt-4 pb-1">
+        <div className="flex items-baseline gap-4">
+          <h1 className="font-script text-6xl leading-none text-warm" style={{ textShadow: "-3px 3px 0 #b8321a" }}>
+            komenský
           </h1>
-          <p className="text-sm text-ink/60">{ov?.subject ?? "Matematika pro 3. třídu"}</p>
+          <div className="text-cream">
+            <p className="text-base font-bold">{ov?.subject ?? "Matematika pro 3. třídu"}</p>
+            <p className="text-xs font-semibold opacity-70" data-testid="version">{version && `verze ${version}`}</p>
+          </div>
         </div>
         {phase !== "setup" && phase !== "boot" && (
-          <button onClick={() => setModal("settings")} className="rounded-full bg-white px-4 py-2 font-bold shadow-sm ring-1 ring-black/5" aria-label="Nastavení">
-            ⚙️ Nastavení
+          <button onClick={() => setModal("settings")} className="rounded-full bg-warm px-6 py-2.5 text-lg font-extrabold text-brand active:scale-95" aria-label="Nastavení">
+            nastavení
           </button>
         )}
       </header>
       <main className="min-h-0 flex-1 overflow-y-auto">
-        {phase === "boot" && <p className="mt-24 text-center text-2xl">Načítám…</p>}
+        {phase === "boot" && <p className="mt-24 text-center text-2xl font-bold text-cream">Načítám…</p>}
         {phase === "error" && (
-          <div className="mx-auto mt-24 max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mt-24 max-w-md rounded-[40px] bg-cream p-8 text-center text-ink">
             <p className="text-2xl font-bold">Ouha, něco se nepovedlo 😕</p>
             <p className="mt-2 text-base text-ink/60">{err}</p>
-            <button className="mt-4 rounded-2xl bg-brand px-6 py-3 text-lg font-bold text-white" onClick={() => { setPhase("boot"); void boot(); }}>Zkusit znovu</button>
+            <button className="mt-4 rounded-full bg-brand px-8 py-3 text-lg font-extrabold text-white" onClick={() => { setPhase("boot"); void boot(); }}>Zkusit znovu</button>
           </div>
         )}
         {phase === "setup" && <Setup onDone={() => void boot()} />}
-        {phase === "home" && ov && <Home ov={ov} onStart={start} busy={busy} error={err} onSkipped={() => void refresh()} />}
+        {phase === "home" && ov && <Home ov={ov} onPractice={() => setPhase("practice")} onStart={start} busy={busy} error={err} onSkipped={() => void refresh()} />}
+        {phase === "practice" && <Practice onExit={() => setPhase("home")} />}
         {phase === "lesson" && lesson && <LessonScreen key={lesson.lesson.id} data={lesson} onExit={exitLesson} />}
       </main>
       <UpdateBanner status={update} inLesson={inLesson} />

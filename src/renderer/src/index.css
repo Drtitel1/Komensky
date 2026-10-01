@@ -1,15 +1,22 @@
 @import "tailwindcss";
+@import "@fontsource/figtree/400.css";
+@import "@fontsource/figtree/600.css";
+@import "@fontsource/figtree/700.css";
+@import "@fontsource/figtree/800.css";
+@import "@fontsource/yellowtail/400.css";
 
 :root {
-  --bg: #fff8ee;
-  --ink: #2b2a4c;
-  --brand: #5b4bdb;
-  --brand-soft: #ece9ff;
-  --good: #1f9d55;
-  --good-soft: #e3f7ea;
-  --bad: #d64545;
-  --bad-soft: #fde8e8;
-  --warm: #ffb84d;
+  /* "Scoop" look: tomato ground, blush + mint + sunshine accents, cream cards */
+  --bg: #d9431f;
+  --ink: #3a1a10;
+  --brand: #b8321a;
+  --brand-soft: #f7d7d6;
+  --good: #1b7a63;
+  --good-soft: #cffbf5;
+  --bad: #a8261c;
+  --bad-soft: #fde2df;
+  --warm: #ffe11a;
+  --cream: #fff6ec;
 }
 
 @theme inline {
@@ -22,6 +29,8 @@
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
   --color-warm: var(--warm);
+  --color-cream: var(--cream);
+  --font-script: "Yellowtail", cursive;
 }
 
 html,
@@ -33,7 +42,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+  font-family: "Figtree", "Segoe UI", system-ui, sans-serif;
   font-size: 18px;
   user-select: none;
 }
@@ -48,7 +57,7 @@ button:disabled {
   opacity: 0.55;
 }
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(91, 75, 219, 0.45); }
-  100% { box-shadow: 0 0 0 28px rgba(91, 75, 219, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(255, 225, 26, 0.6); }
+  100% { box-shadow: 0 0 0 28px rgba(255, 225, 26, 0); }
 }
 .pulse { animation: pulse-ring 1.4s ease-out infinite; }
